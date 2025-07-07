@@ -1,0 +1,59 @@
+# Виртуальное окружение
+.venv/
+env/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Django
+/personal_network/db.sqlite3
+media/
+staticfiles/
+*.log
+
+# Миграции
+**/migrations/*.py
+!**/migrations/__init__.py
+**/migrations/*.pyc
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Mac и Windows системные файлы
+.DS_Store
+Thumbs.db
+
+# poetry
+poetry.lock
+
+# dotenv-файлы
+.env
+.env.*
+
+# Тестовые отчёты и покрытия
+htmlcov/
+coverage.xml
+*.cover
+.cache/
+.tox/
+.pytest_cache/
+
+# mypy, pylint, etc.
+.mypy_cache/
+.pylint.d/
+.dmypy.json
+.pyre/
+
+
