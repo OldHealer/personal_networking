@@ -15,7 +15,6 @@ dist/
 build/
 
 # Django
-/personal_network/db.sqlite3
 media/
 staticfiles/
 *.log
