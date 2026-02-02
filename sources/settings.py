@@ -16,7 +16,6 @@ class ApiSettings(BaseModel):
     """Настройки API сервера"""
     host: str = Field(default="0.0.0.0", description="Хост для запуска API сервера")
     port: int = Field(default=8000, gt=0, le=65535, description="Порт для API сервера")
-    workers: int = Field(default=1, ge=1, description="Количество рабочих процессов")
     base_url: str = Field(default="http://localhost:3000", description="URL frontend")
     verify_ssl: bool = Field(default=True, description="Флаг проверки сертификата")
     ssl_keyfile: str | None = Field(default=None, description="Путь до ключа сертификата")

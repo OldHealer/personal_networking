@@ -5,7 +5,7 @@ import os
 import traceback
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, APIRouter
 # from fastapi.openapi.utils import get_openapi
 # from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse, Response
@@ -91,14 +91,42 @@ async def lifespan(app: FastAPI):
         print(f'Приложение остановлено')
 
 app = FastAPI(
-    title="Erebus (Filin Portal API)",
-    description="API для публичной и административной частей портала Filin.",
-    version="1.0.0",
+    title="Rockfile",
+    description="API персональной картотеки и нетворкинга.",
+    version="0.1.0",
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",  # Путь к JSON-схеме OpenAPI
     redoc_url="/api/redoc",
     lifespan=lifespan,  # Use the lifespan manager
 )
+
+@app.get("/", summary="Корневой эндпоинт")
+async def root_index():
+    return {
+        "message": "API запущено. Откройте /api/docs для Swagger.",
+        "docs": "/api/docs",
+    }
+
+
+router = APIRouter(prefix="/api/v1", tags=["Базовые"])
+
+
+@router.get("/ping", summary="Проверка доступности")
+async def ping():
+    return {"status": "ok"}
+
+
+@router.get("/", summary="Корневой эндпоинт v1")
+async def root():
+    return {
+        "name": app.title,
+        "description": app.description,
+        "version": app.version,
+    }
+
+
+app.include_router(router)
+
 
 # @app.get("/api/v1/openapi_json", tags=["Документация"])
 # async def get_openapi_json():
