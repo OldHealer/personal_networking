@@ -40,6 +40,50 @@ class DataBaseSettings(BaseModel):
     def database_url(self) -> str:
         return f"{self.db_driver}://{self.db_user}:{self.db_password.get_secret_value()}@{self.db_host}:{self.db_port}/{self.db_name}"
 
+class KeycloakSettings(BaseModel):
+    """Настройки Keycloak"""
+    issuer: str = Field(default="http://localhost:8181/realms/rockfile", description="Issuer из OIDC")
+    audience: str = Field(default="rockfile-api", description="Audience для JWT")
+    jwks_url: str | None = Field(default=None, description="URL JWKS (если не задан, собирается из issuer)")
+    auth_url: str | None = Field(default=None, description="Authorization URL для Swagger/OIDC")
+    token_url: str | None = Field(default=None, description="Token URL для Swagger/OIDC")
+    client_id: str = Field(default="rockfile-api", description="Client ID для Swagger/OIDC")
+
+    @property
+    def jwks_url_final(self) -> str:
+        if self.jwks_url:
+            return self.jwks_url
+        return f"{self.issuer}/protocol/openid-connect/certs"
+    
+    @property
+    def auth_url_final(self) -> str:
+        if self.auth_url:
+            return self.auth_url
+        return f"{self.issuer}/protocol/openid-connect/auth"
+
+    @property
+    def token_url_final(self) -> str:
+        if self.token_url:
+            return self.token_url
+        return f"{self.issuer}/protocol/openid-connect/token"
+    
+
+class KeycloakAdminSettings(BaseModel):
+    """Настройки административного доступа к Keycloak (создание пользователей)."""
+    base_url: str = Field(default="http://localhost:8181", description="Базовый URL Keycloak")
+    realm: str = Field(default="rockfile", description="Realm для управления пользователями")
+    client_id: str = Field(default="rockfile-admin-cli", description="Client ID для admin API")
+    client_secret: str = Field(default="", description="Client secret для admin API (confidential client)")
+
+    @property
+    def token_url(self) -> str:
+        return f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token"
+
+    @property
+    def admin_users_url(self) -> str:
+        return f"{self.base_url}/admin/realms/{self.realm}/users"
+
+
 class SMTPSettings(BaseModel):
     """Настройки для отправки email"""
     login: str | None = Field(None, description="Логин для подключения к SMTP-серверу")
@@ -48,9 +92,11 @@ class SMTPSettings(BaseModel):
     port: int | None = Field(None, description="Порт SMTP-сервера")
     send_to: list[str] = Field(default_factory=list, description="Список адресов электронной почты, на которые будут отправляться письма")
 
+
 class TokensSettings(BaseModel):
     """Настройки шифрования"""
     secret_key: SecretStr = Field(..., description="Секретная строка шифрования токена")
+
 
 class Audit(BaseModel):
     """Настройки аудит-логирования"""
@@ -58,6 +104,7 @@ class Audit(BaseModel):
     min_severity: int = Field(default=3, ge=0, le=10, description="Минимальный уровень серьезности для логирования (0-10). События с severity меньше этого значения не будут логироваться")
     rotation_interval: str = Field(default="7 days", description="Период ротации логов")
     retention_period: str = Field(default="30 days", description="Период хранения логов")
+
 
 class Settings(BaseSettings):
     """
@@ -95,6 +142,10 @@ class Settings(BaseSettings):
     token: TokensSettings = Field(default_factory=TokensSettings, description="Настройки для токенов и шифрования")
     alembic_ini_path: str | None = Field(None, description="Путь до alembic.ini")
     audit: Audit = Field(default_factory=Audit, description="Настройки аудит логгера")
+    keycloak: KeycloakSettings = Field(default_factory=KeycloakSettings, description="Настройки Keycloak")
+    keycloak_admin: KeycloakAdminSettings = Field(default_factory=KeycloakAdminSettings, description="Admin доступ к Keycloak")
+
+
 
 
     @property

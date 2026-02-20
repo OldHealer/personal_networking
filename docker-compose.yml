@@ -1,0 +1,84 @@
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: rockfile-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE__DB_USER:-rockfile}
+      POSTGRES_PASSWORD: ${DATABASE__DB_PASSWORD:-rockfile}
+      POSTGRES_DB: ${DATABASE__DB_NAME:-rockfile}
+    ports:
+      - "5532:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rockfile-network
+
+  keycloak-db:
+    image: postgres:16
+    container_name: rockfile-keycloak-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${KEYCLOAK_DB_USER:-keycloak}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME:-keycloak}
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    networks:
+      - rockfile-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: rockfile-keycloak
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-owner}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-owner}
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: ${KEYCLOAK_DB_NAME:-keycloak}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-keycloak}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+    ports:
+      - "8181:8080"
+    depends_on:
+      - keycloak-db
+    networks:
+      - rockfile-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rockfile-api
+    restart: unless-stopped
+    volumes:
+      - ./:/app
+    environment:
+      DATABASE__DB_HOST: postgres
+      DATABASE__DB_PORT: 5432
+      DATABASE__DB_USER: ${DATABASE__DB_USER:-rockfile}
+      DATABASE__DB_PASSWORD: ${DATABASE__DB_PASSWORD:-rockfile}
+      DATABASE__DB_NAME: ${DATABASE__DB_NAME:-rockfile}
+      API__HOST: 0.0.0.0
+      API__PORT: 8000
+      PYTHONPATH: /app/sources
+      KEYCLOAK__ISSUER: http://localhost:8181/realms/rockfile
+      KEYCLOAK__JWKS_URL: http://keycloak:8080/realms/rockfile/protocol/openid-connect/certs
+      KEYCLOAK_ADMIN__BASE_URL: http://keycloak:8080
+    ports:
+      - "8100:8000"
+    depends_on:
+      - postgres
+      - keycloak
+    networks:
+      - rockfile-network
+
+volumes:
+  postgres_data:
+  keycloak_data:
+
+networks:
+  rockfile-network:

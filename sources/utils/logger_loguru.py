@@ -19,10 +19,8 @@ RETENTION_PERIOD = config.audit.retention_period
 
 # -------------------- Helpers ----------------------
 
-
 def format_console_timestamp(record) -> str:
     return record["time"].strftime("%Y-%m-%d %H:%M:%S")
-
 
 def resolve_log_directory() -> Path:
     """Определяет корректный путь для логов"""
@@ -34,18 +32,15 @@ def resolve_log_directory() -> Path:
     folder.mkdir(parents=True, exist_ok=True)
     return folder
 
-
 def build_console_format(json_format: bool) -> str:
     if json_format:
         return "{message}"
     return "<green>{extra[ts]}</green> " + HOSTNAME + " | <level>{level}</level> | {name}:{function}:{line} - <level>{message}</level>"
 
-
 def build_file_format(json_format: bool) -> str:
     if json_format:
         return "{message}"
     return "{extra[ts]} " + HOSTNAME + " | {level} | {name}:{function}:{line} - {message}"
-
 
 def configure_level_colors():
     logger.level("INFO", color="<blue>")
