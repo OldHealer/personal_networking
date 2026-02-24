@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Rockfile">
+  <rect width="64" height="64" rx="14" fill="#f4e6d8"/>
+  <path d="M10 46l14-18 8 10 6-8 16 16H10z" fill="#c96c4b"/>
+  <path d="M24 28l8 10 6-8 10 10h-8l-8-8-6 8h-8z" fill="#8e4c34"/>
+  <path d="M24 28l4-5 4 5-4 4-4-4z" fill="#fdf6ee"/>
+</svg>

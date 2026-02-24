@@ -8,8 +8,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request, APIRouter
-# from fastapi.openapi.utils import get_openapi
-# from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 # from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
 # from fastapi.exceptions import RequestValidationError, HTTPException
@@ -95,6 +95,56 @@ app = FastAPI(
     },
     lifespan=lifespan,  # Use the lifespan manager
 )
+
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+WEB_DIR = BASE_DIR / "web"
+ASSETS_DIR = WEB_DIR / "assets"
+
+# Статика фронтенда
+app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
+
+
+@app.get("/web", summary="Фронтенд: главная страница", include_in_schema=False)
+async def web_index():
+    return FileResponse(WEB_DIR / "index.html")
+
+
+@app.get("/index.html", summary="Фронтенд: главная страница (html)", include_in_schema=False)
+async def web_index_html():
+    return FileResponse(WEB_DIR / "index.html")
+
+
+@app.get("/login", summary="Фронтенд: авторизация", include_in_schema=False)
+async def web_login():
+    return FileResponse(WEB_DIR / "login.html")
+
+
+@app.get("/login.html", summary="Фронтенд: авторизация (html)", include_in_schema=False)
+async def web_login_html():
+    return FileResponse(WEB_DIR / "login.html")
+
+
+@app.get("/success", summary="Фронтенд: успешная авторизация", include_in_schema=False)
+async def web_success():
+    return FileResponse(WEB_DIR / "success.html")
+
+
+@app.get("/success.html", summary="Фронтенд: успешная авторизация (html)", include_in_schema=False)
+async def web_success_html():
+    return FileResponse(WEB_DIR / "success.html")
+
+
+@app.get("/error", summary="Фронтенд: ошибка авторизации", include_in_schema=False)
+async def web_error():
+    return FileResponse(WEB_DIR / "error.html")
+
+
+@app.get("/error.html", summary="Фронтенд: ошибка авторизации (html)", include_in_schema=False)
+async def web_error_html():
+    return FileResponse(WEB_DIR / "error.html")
+
+
 
 @app.get("/", summary="Корневой эндпоинт")
 async def root_index():

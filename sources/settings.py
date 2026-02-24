@@ -48,6 +48,7 @@ class KeycloakSettings(BaseModel):
     auth_url: str | None = Field(default=None, description="Authorization URL для Swagger/OIDC")
     token_url: str | None = Field(default=None, description="Token URL для Swagger/OIDC")
     client_id: str = Field(default="rockfile-api", description="Client ID для Swagger/OIDC")
+    client_secret: str | None = Field(default=None, description="Client secret (если клиент confidential)")
 
     @property
     def jwks_url_final(self) -> str:

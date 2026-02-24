@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rockfile — персональная картотека</title>
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-content">
+        <div class="logo">Rockfile</div>
+        <nav class="nav">
+          <a class="nav-link is-active" href="index.html">Главная</a>
+          <a class="nav-link" href="login.html">Вход</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <h1>Картотека контактов в стиле Рокфеллера</h1>
+          <p class="lead">
+            Rockfile помогает хранить контекст о людях так, чтобы общение оставалось
+            персональным, осмысленным и полезным для обеих сторон.
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="login.html">Войти</a>
+            <a class="button button-outline" href="#entities">Посмотреть сущности</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="entities" class="section">
+        <div class="container">
+          <h2>Сущности приложения</h2>
+          <div class="grid">
+            <article class="card">
+              <h3>Contact</h3>
+              <p>
+                Контакт — это карточка человека. В карточке можно хранить имя,
+                телефон, email, адрес, интересы, заметки о знакомстве и последние
+                взаимодействия.
+              </p>
+            </article>
+            <article class="card">
+              <h3>ContactLink</h3>
+              <p>
+                Связь между двумя контактами. Позволяет построить граф отношений:
+                друзья, коллеги, родственники, связи через знакомых.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Interaction</h3>
+              <p>
+                История взаимодействий с контактом: встречи, звонки и переписки.
+                Здесь хранятся заметки и ключевые обещания.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-muted">
+        <div class="container">
+          <h2>Зачем это нужно</h2>
+          <ul class="list">
+            <li>Не терять важные детали о людях и договоренностях.</li>
+            <li>Понимать, как связаны контакты между собой.</li>
+            <li>Поддерживать долгосрочные отношения и доверие.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-content">
+        <div>Rockfile — персональная картотека</div>
+        <div class="footer-meta">
+          <span id="footer-year"></span>
+          <span class="footer-separator">|</span>
+          <span>Здесь будет дополнительная информация</span>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/assets/js/main.js"></script>
+  </body>
+</html>

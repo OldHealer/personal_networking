@@ -24,9 +24,13 @@ async def admin_create_user(payload: AdminCreateUserRequest,
     2) Создаём tenant в БД
     3) Создаём AppUser в БД и связываем с tenant
     """
-    result = await admin_create_user(session=session,
-                                     username=payload.username,
-                                     email=payload.email,
-                                     password=payload.password,
-                                     tenant_name=payload.tenant_name)
+    result = await admin_create_user(
+        session=session,
+        username=payload.username,
+        email=payload.email,
+        password=payload.password,
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        tenant_name=payload.tenant_name,
+    )
     return AdminCreateUserResponse(**result)

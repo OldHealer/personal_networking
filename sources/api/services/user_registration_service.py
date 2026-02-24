@@ -36,12 +36,22 @@ async def _generate_unique_tenant_name(session: AsyncSession, base_name: str) ->
         candidate_name = f"{base_name}-{suffix}"
 
 
-def _build_keycloak_payload(username: str, email: str, password: str) -> dict:
+def _build_keycloak_payload(username: str,
+                            email: str,
+                            password: str,
+                            first_name: str | None,
+                            last_name: str | None,
+                        ) -> dict:
     """Формируем payload для создания пользователя в Keycloak."""
+    # Генерируем имя и фамилию, если не переданы
+    generated_first = first_name or username
+    generated_last = last_name or f"{username}_lastname"
 
     return {
         "username": username,
         "email": email,
+        "firstName": generated_first,
+        "lastName": generated_last,
         "enabled": True,
         "emailVerified": True,
         "credentials": [
@@ -58,6 +68,8 @@ async def register_user(session: AsyncSession,
                         username: str,
                         email: str,
                         password: str,
+                        first_name: str,
+                        last_name: str,
                         tenant_name: str | None) -> dict:
     """
     Самостоятельная регистрация:
@@ -73,7 +85,7 @@ async def register_user(session: AsyncSession,
     candidate_name = await _generate_unique_tenant_name(session, base_name)
 
     # 1) Пользователь в Keycloak
-    payload = _build_keycloak_payload(username, email, password)
+    payload = _build_keycloak_payload(username, email, password, first_name, last_name)
     keycloak_user_id = await create_keycloak_user(payload)
 
     # 2) Tenant в БД
@@ -97,6 +109,8 @@ async def admin_create_user(session: AsyncSession,
                             username: str,
                             email: str,
                             password: str,
+                            first_name: str,
+                            last_name: str,
                             tenant_name: str) -> dict:
     """
     Регистрация пользователя администратором:
@@ -111,7 +125,7 @@ async def admin_create_user(session: AsyncSession,
     # при необходимости добавляем суффикс.
     candidate_name = await _generate_unique_tenant_name(session, tenant_name)
 
-    payload = _build_keycloak_payload(username, email, password)
+    payload = _build_keycloak_payload(username, email, password, first_name, last_name)
     keycloak_user_id = await create_keycloak_user(payload)
 
     tenant = Tenant(name=candidate_name)

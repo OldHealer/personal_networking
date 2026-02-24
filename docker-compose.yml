@@ -67,6 +67,8 @@ services:
       PYTHONPATH: /app/sources
       KEYCLOAK__ISSUER: http://localhost:8181/realms/rockfile
       KEYCLOAK__JWKS_URL: http://keycloak:8080/realms/rockfile/protocol/openid-connect/certs
+      KEYCLOAK__TOKEN_URL: http://keycloak:8080/realms/rockfile/protocol/openid-connect/token
+      KEYCLOAK__CLIENT_SECRET: ${KEYCLOAK__CLIENT_SECRET:-}
       KEYCLOAK_ADMIN__BASE_URL: http://keycloak:8080
     ports:
       - "8100:8000"
@@ -82,3 +84,5 @@ volumes:
 
 networks:
   rockfile-network:
+
+# http://localhost:8181/

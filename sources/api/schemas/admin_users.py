@@ -7,6 +7,8 @@ class AdminCreateUserRequest(BaseModel):
     username: str = Field(..., description="Имя пользователя")
     email: EmailStr = Field(..., description="Email пользователя")
     password: str = Field(..., min_length=6, description="Пароль пользователя")
+    first_name: str | None = Field(None, description="Имя")
+    last_name: str | None = Field(None, description="Фамилия")
     tenant_name: str = Field(..., description="Название арендатора")
 
 

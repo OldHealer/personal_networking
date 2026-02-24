@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Вход — Rockfile</title>
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-content">
+        <div class="logo">Rockfile</div>
+        <nav class="nav">
+          <a class="nav-link" href="index.html">Главная</a>
+          <a class="nav-link is-active" href="login.html">Вход</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="auth-page">
+      <section class="auth-card">
+        <h1>Вход в аккаунт</h1>
+        <p class="muted">Введите email и пароль для доступа к картотеке.</p>
+        <form id="login-form" class="form">
+          <label class="field">
+            <span>Email</span>
+            <input type="email" name="email" placeholder="you@example.com" required />
+          </label>
+          <label class="field">
+            <span>Пароль</span>
+            <input type="password" name="password" placeholder="********" required />
+          </label>
+          <button class="button" type="submit">Войти</button>
+          <p id="login-message" class="form-message"></p>
+        </form>
+
+        <div class="divider"></div>
+
+        <h2>Регистрация</h2>
+        <p class="muted">Создайте аккаунт, чтобы начать вести картотеку.</p>
+        <form id="register-form" class="form">
+          <label class="field">
+            <span>Имя пользователя</span>
+            <input type="text" name="username" placeholder="ivan" required />
+          </label>
+          <label class="field">
+            <span>Имя</span>
+            <input type="text" name="first_name" placeholder="Ivan" />
+          </label>
+          <label class="field">
+            <span>Фамилия</span>
+            <input type="text" name="last_name" placeholder="Ivanov" />
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input type="email" name="email" placeholder="ivan@example.com" required />
+          </label>
+          <label class="field">
+            <span>Пароль</span>
+            <input type="password" name="password" placeholder="********" required />
+          </label>
+          <label class="field">
+            <span>Название tenant</span>
+            <input type="text" name="tenant_name" placeholder="Ivan Corp" />
+          </label>
+          <button class="button" type="submit">Создать аккаунт</button>
+          <p id="register-message" class="form-message"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-content">
+        <div>Rockfile — персональная картотека</div>
+        <div class="footer-meta">
+          <span id="footer-year"></span>
+          <span class="footer-separator">|</span>
+          <span>Здесь будет дополнительная информация</span>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/assets/js/auth.js"></script>
+  </body>
+</html>
