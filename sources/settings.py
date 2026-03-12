@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 LOCAL_DEV: bool = False # Флаг для локального запуска с IDE и миграций
 
+
 class ApiSettings(BaseModel):
     """Настройки API сервера"""
     host: str = Field(default="0.0.0.0", description="Хост для запуска API сервера")
@@ -23,6 +24,7 @@ class ApiSettings(BaseModel):
     environment: Literal["DEV", "TEST", "STAGE", "PROD"] = Field(default='DEV', description="Среда запуска сервиса")
     cache_size: int = Field(default=2048, description="Максимальное количество объектов для кэширования")
     cache_ttl: int = Field(default=3600, description="Максимальное время кэширования объектов в секундах")
+
 
 class DataBaseSettings(BaseModel):
     """Настройки Базы данных"""
@@ -40,13 +42,24 @@ class DataBaseSettings(BaseModel):
     def database_url(self) -> str:
         return f"{self.db_driver}://{self.db_user}:{self.db_password.get_secret_value()}@{self.db_host}:{self.db_port}/{self.db_name}"
 
+
 class KeycloakSettings(BaseModel):
     """Настройки Keycloak"""
     issuer: str = Field(default="http://localhost:8181/realms/rockfile", description="Issuer из OIDC")
+    issuer_aliases: list = Field(default_factory=list, description="Допустимые альтернативные issuer (например, внутренние адреса)")
     audience: str = Field(default="rockfile-api", description="Audience для JWT")
+    audience_aliases: list[str] = Field(default_factory=lambda: ["account"], description="Дополнительные допустимые audience (Keycloak часто отдаёт aud=account)")
     jwks_url: str | None = Field(default=None, description="URL JWKS (если не задан, собирается из issuer)")
     auth_url: str | None = Field(default=None, description="Authorization URL для Swagger/OIDC")
     token_url: str | None = Field(default=None, description="Token URL для Swagger/OIDC")
+    auth_url_public: str | None = Field(
+        default=None,
+        description="Authorization URL для Swagger UI (доступный из браузера)",
+    )
+    token_url_public: str | None = Field(
+        default=None,
+        description="Token URL для Swagger UI (доступный из браузера)",
+    )
     client_id: str = Field(default="rockfile-api", description="Client ID для Swagger/OIDC")
     client_secret: str | None = Field(default=None, description="Client secret (если клиент confidential)")
 
@@ -67,7 +80,19 @@ class KeycloakSettings(BaseModel):
         if self.token_url:
             return self.token_url
         return f"{self.issuer}/protocol/openid-connect/token"
-    
+
+    @property
+    def auth_url_for_docs(self) -> str:
+        if self.auth_url_public:
+            return self.auth_url_public
+        return self.auth_url_final
+
+    @property
+    def token_url_for_docs(self) -> str:
+        if self.token_url_public:
+            return self.token_url_public
+        return self.token_url_final
+        
 
 class KeycloakAdminSettings(BaseModel):
     """Настройки административного доступа к Keycloak (создание пользователей)."""

@@ -12,8 +12,8 @@ from settings import config
 
 # OAuth2 Authorization Code flow для Swagger UI
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
-    authorizationUrl=config.keycloak.auth_url_final,
-    tokenUrl=config.keycloak.token_url_final,
+    authorizationUrl=config.keycloak.auth_url_for_docs,
+    tokenUrl=config.keycloak.token_url_for_docs,
     scopes={},
 )
 

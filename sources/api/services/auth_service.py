@@ -34,8 +34,5 @@ async def login_with_password(username: str, password: str) -> dict[str, Any]:
     async with httpx.AsyncClient() as client:
         response = await client.post(config.keycloak.token_url_final, data=data, timeout=10)
         if response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Keycloak login failed: {response.text}",
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Неверный логин/пароль")
         return response.json()

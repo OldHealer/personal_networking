@@ -10,10 +10,13 @@
   <body>
     <header class="site-header">
       <div class="container header-content">
-        <div class="logo">Rockfile</div>
+        <a class="logo" href="index.html">
+          <img src="/assets/img/favicon.svg" alt="" class="logo-img" width="32" height="32" />
+          Rockfile
+        </a>
         <nav class="nav">
-          <a class="nav-link is-active" href="index.html">Главная</a>
           <a class="nav-link" href="login.html">Вход</a>
+          <a class="button button-outline header-cta" href="login.html">Начать</a>
         </nav>
       </div>
     </header>
@@ -28,35 +31,40 @@
           </p>
           <div class="hero-actions">
             <a class="button" href="login.html">Войти</a>
-            <a class="button button-outline" href="#entities">Посмотреть сущности</a>
           </div>
         </div>
       </section>
 
       <section id="entities" class="section">
         <div class="container">
-          <h2>Сущности приложения</h2>
+          <h2>Как устроена сеть</h2>
+          <p class="muted">
+            Здесь все простое и человечное: вы сохраняете людей, отмечаете живые моменты
+            общения и видите, как знакомства соединяются между собой. Это не просто записная
+            книжка, а спокойный инструмент нетворкинга, который помогает помнить важное и
+            быть ближе к людям.
+          </p>
           <div class="grid">
             <article class="card">
-              <h3>Contact</h3>
+              <h3>Контакт</h3>
               <p>
-                Контакт — это карточка человека. В карточке можно хранить имя,
-                телефон, email, адрес, интересы, заметки о знакомстве и последние
-                взаимодействия.
+                Основа всего — контакт. Карточка человека с именем, телефоном,
+                интересами и маленькими деталями, которые помогают помнить его настоящим.
               </p>
             </article>
             <article class="card">
-              <h3>ContactLink</h3>
+              <h3>Взаимодействия</h3>
               <p>
-                Связь между двумя контактами. Позволяет построить граф отношений:
-                друзья, коллеги, родственники, связи через знакомых.
+                Взаимодействия — это встречи, звонки, переписки и обещания. Здесь
+                сохраняется контекст общения, чтобы продолжать общение с вниманием.
               </p>
             </article>
             <article class="card">
-              <h3>Interaction</h3>
+              <h3>Связи контактов</h3>
               <p>
-                История взаимодействий с контактом: встречи, звонки и переписки.
-                Здесь хранятся заметки и ключевые обещания.
+                Связи между людьми помогают видеть сеть отношений: друзья, коллеги,
+                партнеры, знакомства — все, что делает ваш круг живым
+                и понятным.
               </p>
             </article>
           </div>
@@ -67,22 +75,28 @@
         <div class="container">
           <h2>Зачем это нужно</h2>
           <ul class="list">
-            <li>Не терять важные детали о людях и договоренностях.</li>
-            <li>Понимать, как связаны контакты между собой.</li>
-            <li>Поддерживать долгосрочные отношения и доверие.</li>
+            <li>Помогает быстро вспомнить человека и быть внимательным в общении.</li>
+            <li>Сохраняет историю встреч и обещаний, чтобы доверие росло.</li>
+            <li>Показывает, через кого вы связаны, и облегчает знакомства.</li>
           </ul>
+          <p class="muted">
+            Rockfile бережно хранит контекст — поэтому перед встречей вы быстро
+            вспоминаете, чем человек живет, что вы обсуждали и о чем договаривались.
+            Разговор складывается легко, а отношения становятся крепче.
+          </p>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
       <div class="container footer-content">
-        <div>Rockfile — персональная картотека</div>
-        <div class="footer-meta">
+        <p class="footer-line">
           <span id="footer-year"></span>
-          <span class="footer-separator">|</span>
-          <span>Здесь будет дополнительная информация</span>
-        </div>
+          <span class="footer-sep"> · </span>
+          <span class="footer-about">Private project.</span>
+          <span class="footer-sep"> · </span>
+          <span class="footer-contact">Если есть вопросы или предложения, напишите мне в <a href="https://t.me/old_healer">Telegram</a>.</span>
+        </p>
       </div>
     </footer>
 

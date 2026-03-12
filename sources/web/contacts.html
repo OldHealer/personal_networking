@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Контакты — Rockfile</title>
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-content">
+        <a class="logo" href="/index.html">
+          <img src="/assets/img/favicon.svg" alt="" class="logo-img" width="32" height="32" />
+          Rockfile
+        </a>
+        <nav class="nav">
+          <a class="nav-link" href="/index.html">Главная</a>
+          <a class="nav-link is-active" href="/contacts.html">Контакты</a>
+          <a class="nav-link" href="/login.html">Вход</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="section">
+      <div class="container">
+        <div class="page-header">
+          <div>
+            <h1>Контакты</h1>
+            <p class="muted">Список карточек вашей личной сети.</p>
+          </div>
+          <div class="page-header-actions">
+            <button form="contact-form" class="button button-header-action" type="submit">Сохранить</button>
+            <button id="refresh-contacts" class="button button-outline button-header-action" type="button" title="Заново загрузить список контактов с сервера">
+              Обновить
+            </button>
+          </div>
+        </div>
+        <p id="auth-error" class="form-message" role="alert" style="display: none;"></p>
+
+        <section class="card form-card add-contact-compact">
+          <h2>Быстрое добавление контакта</h2>
+          <form id="contact-form" class="form form-inline-compact">
+            <label class="field">
+              <span>Полное имя</span>
+              <input type="text" name="full_name" placeholder="Иван Иванов" required />
+            </label>
+            <label class="field">
+              <span>Телефон</span>
+              <input type="text" name="phone" placeholder="+7 900 000-00-00" />
+            </label>
+            <label class="field">
+              <span>Email</span>
+              <input type="email" name="email" placeholder="ivan@example.com" />
+            </label>
+            <label class="field">
+              <span>Заметка</span>
+              <input type="text" name="projects_notes" placeholder="Где познакомились / о чём договорились" />
+            </label>
+            <p id="contact-message" class="form-message"></p>
+          </form>
+        </section>
+
+        <section class="contacts-list">
+          <div class="list-header">
+            <h2>Все контакты</h2>
+            <label class="field field-inline contacts-search-wrap list-header-search">
+              <span class="visually-hidden">Поиск</span>
+              <input type="search" id="contacts-search" placeholder="Поиск по имени или фамилии…" autocomplete="off" />
+            </label>
+            <label class="field field-inline">
+              <span>Сортировка</span>
+              <select id="contacts-sort">
+                <option value="name">По имени</option>
+                <option value="last_contact_at">По последнему контакту</option>
+                <option value="created_at">По дате создания</option>
+              </select>
+            </label>
+          </div>
+          <div id="contacts-empty" class="muted">Пока нет контактов.</div>
+          <div id="contacts-grid" class="grid"></div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-content">
+        <p class="footer-line">
+          <span id="footer-year"></span>
+          <span class="footer-sep"> · </span>
+          <span class="footer-about">Private project.</span>
+          <span class="footer-sep"> · </span>
+          <span class="footer-contact">Если есть вопросы или предложения, напишите мне в <a href="https://t.me/old_healer">Telegram</a>.</span>
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="/assets/js/contacts.js"></script>
+  </body>
+</html>

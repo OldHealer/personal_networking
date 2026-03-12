@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Контакт — Rockfile</title>
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-content">
+        <a class="logo" href="/index.html">
+          <img src="/assets/img/favicon.svg" alt="" class="logo-img" width="32" height="32" />
+          Rockfile
+        </a>
+        <nav class="nav">
+          <a class="nav-link" href="/index.html">Главная</a>
+          <a class="nav-link" href="/contacts.html">Контакты</a>
+          <a class="nav-link" href="/login.html">Вход</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="section">
+      <div class="container">
+        <div class="page-header">
+          <div>
+            <a href="/contacts.html" class="back-link">← К списку контактов</a>
+            <h1 id="contact-title">Контакт</h1>
+          </div>
+          <div class="page-actions">
+            <button id="btn-edit" class="button button-outline" type="button" style="display: none;">Редактировать</button>
+            <button id="btn-save" class="button" type="button" style="display: none;">Сохранить</button>
+            <button id="btn-cancel" class="button button-outline" type="button" style="display: none;">Отмена</button>
+            <button id="btn-delete" class="button" type="button" style="display: none;">Удалить</button>
+          </div>
+        </div>
+        <p id="auth-error" class="form-message" role="alert" style="display: none;"></p>
+        <p id="contact-page-message" class="form-message"></p>
+
+        <div id="contact-loading" class="muted">Загрузка...</div>
+        <div id="contact-content" style="display: none;">
+          <form id="contact-form" class="form contact-form-sections">
+            <section class="card form-card">
+              <h2>Основное</h2>
+              <label class="field">
+                <span>Полное имя</span>
+                <input type="text" name="full_name" required />
+              </label>
+              <label class="field">
+                <span>Телефон</span>
+                <input type="text" name="phone" placeholder="+7 900 000-00-00" />
+              </label>
+              <label class="field">
+                <span>Email</span>
+                <input type="email" name="email" placeholder="ivan@example.com" />
+              </label>
+              <label class="field">
+                <span>Адрес</span>
+                <input type="text" name="address" />
+              </label>
+              <label class="field">
+                <span>Тип отношений</span>
+                <select name="relationship_type">
+                  <option value="">— не указан —</option>
+                  <option value="business">Деловой</option>
+                  <option value="personal">Личный</option>
+                  <option value="other">Другое</option>
+                </select>
+              </label>
+            </section>
+
+            <section class="card form-card">
+              <h2>Знакомство</h2>
+              <label class="field">
+                <span>Когда познакомились</span>
+                <input type="datetime-local" name="first_met_at" />
+              </label>
+              <label class="field">
+                <span>Место знакомства</span>
+                <input type="text" name="first_met_place" />
+              </label>
+              <label class="field">
+                <span>Обстоятельства</span>
+                <textarea name="first_met_context" rows="2"></textarea>
+              </label>
+            </section>
+
+            <section class="card form-card">
+              <h2>Проекты и заметки</h2>
+              <label class="field">
+                <span>Проекты, договорённости</span>
+                <textarea name="projects_notes" rows="3" placeholder="Где познакомились / о чём договорились"></textarea>
+              </label>
+            </section>
+
+            <section class="card form-card">
+              <h2>Личное</h2>
+              <label class="field">
+                <span>Семейное положение</span>
+                <input type="text" name="family_status" />
+              </label>
+              <label class="field">
+                <span>День рождения</span>
+                <input type="date" name="birthday" />
+              </label>
+              <label class="field">
+                <span>Хобби (каждое с новой строки)</span>
+                <textarea name="hobbies" rows="2" placeholder="Спорт&#10;Музыка"></textarea>
+              </label>
+              <label class="field">
+                <span>Интересы (каждое с новой строки)</span>
+                <textarea name="interests" rows="2"></textarea>
+              </label>
+            </section>
+
+            <section class="card form-card">
+              <h2>Последний контакт</h2>
+              <label class="field">
+                <span>Дата последнего контакта</span>
+                <input type="datetime-local" name="last_contact_at" />
+              </label>
+              <label class="field">
+                <span>Заметка о последнем контакте</span>
+                <textarea name="last_contact_summary" rows="2"></textarea>
+              </label>
+            </section>
+
+            <section class="card form-card">
+              <h2>Оценки и рекомендации</h2>
+              <label class="field">
+                <span>Оценка компетенций (1–5)</span>
+                <input type="number" name="competence_rating" min="1" max="5" />
+              </label>
+              <label class="field">
+                <span>Комментарий к оценке</span>
+                <textarea name="competence_notes" rows="2"></textarea>
+              </label>
+              <label class="field">
+                <span>Рекомендации и мнения</span>
+                <textarea name="recommendations" rows="2"></textarea>
+              </label>
+            </section>
+
+            <section class="card form-card">
+              <h2>Планы и обещания</h2>
+              <label class="field">
+                <span>Обещания (каждое с новой строки)</span>
+                <textarea name="promises" rows="2"></textarea>
+              </label>
+              <label class="field">
+                <span>Цели (каждое с новой строки)</span>
+                <textarea name="goals" rows="2"></textarea>
+              </label>
+              <label class="field">
+                <span>Амбиции и планы</span>
+                <textarea name="ambitions" rows="2"></textarea>
+              </label>
+            </section>
+
+            <section class="card form-card">
+              <h2>Соцсети (JSON)</h2>
+              <label class="field">
+                <span>Социальные сети и контакты</span>
+                <textarea name="socials" rows="3" placeholder='{"telegram": "@nick", "linkedin": "url"}'></textarea>
+              </label>
+            </section>
+
+            <section class="card form-card" id="contact-meta-section">
+              <h2>Служебное</h2>
+              <p class="muted"><span id="meta-created"></span> · <span id="meta-updated"></span></p>
+            </section>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-content">
+        <p class="footer-line">
+          <span id="footer-year"></span>
+          <span class="footer-sep"> · </span>
+          <span class="footer-about">Private project.</span>
+          <span class="footer-sep"> · </span>
+          <span class="footer-contact">Если есть вопросы или предложения, напишите мне в <a href="https://t.me/old_healer">Telegram</a>.</span>
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="/assets/js/contact.js"></script>
+  </body>
+</html>

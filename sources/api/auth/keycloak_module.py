@@ -1,5 +1,7 @@
+import logging
 import time
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 from jose import JWTError, jwt
@@ -7,6 +9,8 @@ from pydantic import BaseModel, Field
 from fastapi import HTTPException, status
 
 from settings import config
+
+logger = logging.getLogger(__name__)
 
 # Простое кэширование JWKS, чтобы не дергать Keycloak на каждый запрос
 _JWKS_CACHE: dict[str, Any] | None = None
@@ -79,19 +83,43 @@ async def verify_jwt_token(token: str) -> TokenPayload:
         if not jwk:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unknown kid in token")
 
-        # Декодируем и валидируем токен
+        # Декодируем и валидируем токен (aud проверяем вручную — Keycloak может вернуть aud=account или client_id)
+        allowed_audiences = [config.keycloak.audience, *config.keycloak.audience_aliases]
         payload = jwt.decode(
             token,
             jwk,
             algorithms=[jwk.get("alg", "RS256")],
-            audience=config.keycloak.audience,
-            issuer=config.keycloak.issuer,
             options={
-                "verify_aud": True,
-                "verify_iss": True,
+                "verify_aud": False,
+                "verify_iss": False,
                 "verify_exp": True,
             },
         )
+
+        # Keycloak не всегда добавляет aud в access token; проверяем только если aud есть
+        token_aud = payload.get("aud")
+        if token_aud is not None:
+            aud_list = [token_aud] if isinstance(token_aud, str) else (token_aud or [])
+            if aud_list and not any(a in allowed_audiences for a in aud_list):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token audience",
+                )
+
+        allowed_issuers = [config.keycloak.issuer, *config.keycloak.issuer_aliases]
+        token_issuer = payload.get("iss")
+        # Путь realm из настроек (например /realms/rockfile) — принимаем любой issuer с тем же путём (разный host/port)
+        issuer_realm_path = urlparse(config.keycloak.issuer).path.rstrip("/")
+        issuer_ok = (
+            token_issuer in allowed_issuers
+            or (issuer_realm_path and token_issuer and token_issuer.rstrip("/").endswith(issuer_realm_path))
+        )
+        if not issuer_ok:
+            logger.warning("Invalid token issuer: got %r, allowed %s", token_issuer, allowed_issuers)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token issuer",
+            )
 
         return TokenPayload(**payload)
     except JWTError as exc:

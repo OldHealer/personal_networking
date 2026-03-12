@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff6ed;stop-opacity:0" />
+      <stop offset="60%" style="stop-color:#f7f2eb;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#f7f2eb;stop-opacity:0.6" />
+    </linearGradient>
+    <linearGradient id="peak1" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#8e4c34;stop-opacity:0.5" />
+      <stop offset="100%" style="stop-color:#c96c4b;stop-opacity:0.25" />
+    </linearGradient>
+    <linearGradient id="peak2" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#6d5a48;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#a08b76;stop-opacity:0.2" />
+    </linearGradient>
+    <linearGradient id="peak3" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#8e4c34;stop-opacity:0.35" />
+      <stop offset="100%" style="stop-color:#e3b089;stop-opacity:0.15" />
+    </linearGradient>
+  </defs>
+  <!-- Back layer: distant peaks -->
+  <path fill="url(#peak2)" d="M-50 400 L200 220 L450 400 Z" />
+  <path fill="url(#peak2)" d="M150 400 L500 180 L750 400 Z" />
+  <path fill="url(#peak2)" d="M450 400 L800 200 L1100 400 L1200 400 Z" />
+  <!-- Middle layer -->
+  <path fill="url(#peak3)" d="M-20 400 L280 260 L520 400 Z" />
+  <path fill="url(#peak3)" d="M380 400 L650 240 L920 400 Z" />
+  <path fill="url(#peak3)" d="M750 400 L1000 280 L1250 400 Z" />
+  <!-- Front layer: main peaks (rock symbol) -->
+  <path fill="url(#peak1)" d="M0 400 L350 240 L550 400 Z" />
+  <path fill="url(#peak1)" d="M400 400 L700 220 L950 400 Z" />
+  <path fill="url(#peak1)" d="M850 400 L1100 260 L1200 400 L1200 400 Z" />
+</svg>

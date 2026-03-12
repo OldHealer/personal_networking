@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from api.data_base.models import Base
 from api.routers.v1.auth import auth_router
+from api.routers.v1.contacts import contacts_router
 from api.data_base.base import db
 from utils.db_bootstrap import ensure_database_exists, run_migrations
 from settings import config
@@ -125,20 +126,33 @@ async def web_login_html():
     return FileResponse(WEB_DIR / "login.html")
 
 
+@app.get("/contacts", summary="Фронтенд: контакты", include_in_schema=False)
+async def web_contacts():
+    return FileResponse(WEB_DIR / "contacts.html")
+
+@app.get("/contacts.html", summary="Фронтенд: контакты (html)", include_in_schema=False)
+async def web_contacts_html():
+    return FileResponse(WEB_DIR / "contacts.html")
+
+@app.get("/contact", summary="Фронтенд: карточка контакта", include_in_schema=False)
+async def web_contact():
+    return FileResponse(WEB_DIR / "contact.html")
+
+@app.get("/contact.html", summary="Фронтенд: карточка контакта (html)", include_in_schema=False)
+async def web_contact_html():
+    return FileResponse(WEB_DIR / "contact.html")
+
 @app.get("/success", summary="Фронтенд: успешная авторизация", include_in_schema=False)
 async def web_success():
     return FileResponse(WEB_DIR / "success.html")
-
 
 @app.get("/success.html", summary="Фронтенд: успешная авторизация (html)", include_in_schema=False)
 async def web_success_html():
     return FileResponse(WEB_DIR / "success.html")
 
-
 @app.get("/error", summary="Фронтенд: ошибка авторизации", include_in_schema=False)
 async def web_error():
     return FileResponse(WEB_DIR / "error.html")
-
 
 @app.get("/error.html", summary="Фронтенд: ошибка авторизации (html)", include_in_schema=False)
 async def web_error_html():
@@ -173,4 +187,5 @@ async def root():
 
 app.include_router(router)
 app.include_router(auth_router)
+app.include_router(contacts_router)
 

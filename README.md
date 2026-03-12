@@ -1,157 +1,45 @@
 # Rockfile
 
-**Картотека контактов Рокфеллера** — приложение для управления персональной картотекой с детальной информацией о каждом человеке. Идея основана на методологии Джона Рокфеллера, у которого было порядка 200 000 карточек с заметками о контактах, встречах, обещаниях и связях между людьми.
+> **A personal contact and card-making system inspired by the Rockefeller card index, powered by AI.**
 
-## Возможности
 
-- **Карточки контактов** — имя, контакты, дата знакомства, интересы, семья, заметки, обещания, цели
-- **Связи между контактами** — граф отношений (кто кого знает, семья, друзья, коллеги)
-- **История взаимодействий** — встречи, звонки, переписки с заметками и обещаниями
-- **Персонализация** — максимум контекста для тёплого, осмысленного общения
 
-## Технологии
+![Stack](https://img.shields.io/badge/stack-FastAPI%20%7C%20PostgreSQL%20%7C%20Keycloak-8e4c34?style=for-the-badge&labelColor=f7f2eb)
+![Status](https://img.shields.io/badge/status-MVP_in_progress-e3b089?style=for-the-badge&labelColor=2b2a27)
 
-- **Backend:** FastAPI
-- **БД:** PostgreSQL (async через SQLAlchemy 2.0)
-- **Миграции:** Alembic
-- **Конфигурация:** pydantic-settings
+---
+**Rockefeller's Contact File** is an app for managing a personal file with detailed information about each person. The idea is based on the methodology of John D. Rockefeller, who kept approximately 200,000 cards with notes on contacts, meetings, promises, and connections between people.
 
-## Требования
+## Features
+**Contact cards** — name, contacts, date met, interests, family, notes, promises, goals
+**Contact relationships** — relationship (who knows whom, family, friends, colleagues)
+**Interaction history** — meetings, calls, messages with notes and promises
+**Personalization** — maximum context for warm, meaningful communication
 
-- Python ≥ 3.12
-- PostgreSQL
-- [Poetry](https://python-poetry.org/)
+## Technologies
+- **Backend**: FastAPI
+- **DB**: PostgreSQL (async via SQLAlchemy 2.0)
+- **Auth**: Keycloak (OIDC, JWT, multi-tenancy by tenant_id)
+- **Migrations**: Alembic
+- **Configuration**: pydantic-settings
+- **Frontend**: Classic HTML/CSS/JS, developed as the API evolves
 
-## Установка
+## Plan and architecture
 
-```bash
-# Клонировать репозиторий
-git clone <repo-url>
-cd personal_networking
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)  
+  Architecture, domain model (`ContactCard`, `ContactLink`, `ContactInteraction`), layers, perspectives (AI agents, Telegram interface, mobile application).
+- [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md)  
+  Step-by-step development plan by phase: MVP API → Connections → Search → Authorization → Frontend → AI Agent → Telegram Bot / Mini App → Mobile App.
 
-# Установить зависимости
-poetry install
+  For each task, there's a "Progress" column—it can be used as a checklist.
 
-# Активировать окружение
-poetry shell
-```
+## Development Status
 
-## Конфигурация
+- ✅ Basic architecture, data models, infrastructure (migrations, settings).
+- ✅ First HTML pages (login, contact list, contact card).
+- 🟡 CRUD API and frontend are being developed according to the plan in `DEVELOPMENT_PLAN.md`.
 
-Создайте файл `.env` в корне проекта (или `.env.local` для локальной разработки):
-
-```env
-# База данных (обязательно)
-DATABASE__DB_USER=postgres
-DATABASE__DB_PASSWORD=your_password
-DATABASE__DB_HOST=localhost
-DATABASE__DB_PORT=5432
-DATABASE__DB_NAME=rockfile
-
-# API (опционально)
-API__HOST=0.0.0.0
-API__PORT=8000
-
-# Keycloak admin API (нужно для /api/v1/auth/register)
-KEYCLOAK_ADMIN__BASE_URL=http://localhost:8181
-KEYCLOAK_ADMIN__REALM=rockfile
-KEYCLOAK_ADMIN__CLIENT_ID=rockfile-admin-cli
-KEYCLOAK_ADMIN__CLIENT_SECRET=your_secret
-```
-
-## Запуск
-
-```bash
-# Из корня проекта
-cd sources
-python main.py
-```
-
-Или через uvicorn:
-
-```bash
-cd sources
-uvicorn api.fastapi_app:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Сервер будет доступен по адресу: `http://localhost:8000`
-
-## API
-
-- **Swagger UI:** http://localhost:8000/api/docs
-- **ReDoc:** http://localhost:8000/api/redoc
-- **OpenAPI JSON:** http://localhost:8000/api/openapi.json
-
-### Базовые эндпоинты
-
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/` | Корневой эндпоинт |
-| GET | `/api/v1/ping` | Проверка доступности |
-
-## Проверка токена (Keycloak)
-
-### 1) Получить access token (через парольный grant)
-> В Keycloak у клиента `rockfile-api` должен быть включен `Direct access grants`.
-
-**Linux/WSL:**
-```bash
-curl -X POST "http://localhost:8181/realms/rockfile/protocol/openid-connect/token" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=password" \
-  -d "client_id=rockfile-api" \
-  -d "client_secret=YOUR_SECRET" \
-  -d "username=YOUR_USER" \
-  -d "password=YOUR_PASS"
-```
-
-**PowerShell:**
-```powershell
-curl -X POST "http://localhost:8181/realms/rockfile/protocol/openid-connect/token" `
-  -H "Content-Type: application/x-www-form-urlencoded" `
-  -d "grant_type=password" `
-  -d "client_id=rockfile-api" `
-  -d "client_secret=YOUR_SECRET" `
-  -d "username=YOUR_USER" `
-  -d "password=YOUR_PASS"
-```
-
-### 2) Проверить токен через скрипт
-```bash
-poetry run python sources/utils/token_inspect.py <ACCESS_TOKEN>
-```
-
-В ответе ищите:
-- `realm_access.roles` (например, `superadmin`)
-- `iss` (должен совпадать с `http://localhost:8181/realms/rockfile`)
-
-## Структура проекта
-
-```
-personal_networking/
-├── docs/
-│   ├── ARCHITECTURE.md      # Архитектурное видение, сущности, технологии
-│   └── DEVELOPMENT_PLAN.md  # План разработки по фазам
-├── sources/
-│   ├── api/
-│   │   ├── data_base/       # Модели, БД, DAO
-│   │   └── fastapi_app.py   # Приложение FastAPI
-│   ├── main.py              # Точка входа
-│   ├── settings.py          # Конфигурация
-│   └── utils/               # Утилиты (логирование и др.)
-├── pyproject.toml
-└── README.md
-```
-
-## Документация
-
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — архитектура, доменная модель, сущности (ContactCard, ContactLink, ContactInteraction), API, перспективы (ИИ-агент, мобильное приложение)
-- [DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md) — план разработки по фазам (MVP API → связи → поиск → авторизация → расширения)
-
-## Статус разработки
-
-Проект на этапе MVP: настроен FastAPI, модели данных, базовая структура. Полноценный CRUD API и миграции — в разработке по плану.
-
-## Лицензия
+## License / Usage
 
 Private project.
+If you want to discuss or suggest an idea, the best way is to message us on Telegram (`https://t.me/old_healer`).

@@ -34,6 +34,10 @@ services:
     restart: unless-stopped
     command: start-dev
     environment:
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8181
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY: edge
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-owner}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-owner}
       KC_DB: postgres
@@ -68,6 +72,8 @@ services:
       KEYCLOAK__ISSUER: http://localhost:8181/realms/rockfile
       KEYCLOAK__JWKS_URL: http://keycloak:8080/realms/rockfile/protocol/openid-connect/certs
       KEYCLOAK__TOKEN_URL: http://keycloak:8080/realms/rockfile/protocol/openid-connect/token
+      KEYCLOAK__AUTH_URL_PUBLIC: http://localhost:8181/realms/rockfile/protocol/openid-connect/auth
+      KEYCLOAK__TOKEN_URL_PUBLIC: http://localhost:8181/realms/rockfile/protocol/openid-connect/token
       KEYCLOAK__CLIENT_SECRET: ${KEYCLOAK__CLIENT_SECRET:-}
       KEYCLOAK_ADMIN__BASE_URL: http://keycloak:8080
     ports:
