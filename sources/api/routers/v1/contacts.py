@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from utils.logger_loguru import get_logger
 from api.auth.deps import CurrentUser, get_current_user
 from api.data_base.base import get_db_session
 from api.schemas.contacts import (
@@ -17,6 +18,7 @@ from api.services.contacts_service import (
     update_contact as update_contact_service,
 )
 
+logger = get_logger()
 contacts_router = APIRouter(prefix="/api/v1/contacts", tags=["Contacts"])
 
 
@@ -57,11 +59,21 @@ async def get_contact(
     current_user: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    return await get_contact_service(
-        session=session,
-        tenant_id=current_user.db_user.tenant_id,
-        contact_id=contact_id,
-    )
+    try:
+        contact = await get_contact_service(
+            session=session,
+            tenant_id=current_user.db_user.tenant_id,
+            contact_id=contact_id,
+        )
+        return contact
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("get_contact failed contact_id=%s: %s", contact_id, e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка загрузки контакта: {e!s}",
+        ) from e
 
 
 @contacts_router.patch("/{contact_id}", response_model=ContactCardResponse, summary="Обновить контакт")

@@ -13,10 +13,10 @@
 
 | #   | Задача                                              | Результат                                                | Выполнение |
 | --- | --------------------------------------------------- | -------------------------------------------------------- | ---------- |
-| 0.1 | Настроить Alembic для async SQLAlchemy              | `alembic init`, конфиг под asyncpg                       |    ✅     |
-| 0.2 | Создать первую миграцию по текущим моделям          | `contact_cards`, `contact_links`, `contact_interactions` |            |
-| 0.3 | Добавить в pyproject: pytest, pytest-asyncio, httpx | Готовность к тестам                                      |            |
-| 0.4 | Опционально: docker-compose с PostgreSQL            | Локальный запуск БД одной командой                       |            |
+| 0.1 | Настроить Alembic для async SQLAlchemy              | `alembic init`, конфиг под asyncpg                       |    ✅      |
+| 0.2 | Создать первую миграцию по текущим моделям          | `contact_cards`, `contact_links`, `contact_interactions` |    ✅      |
+| 0.3 | Добавить в pyproject: pytest, pytest-asyncio, httpx | Готовность к тестам                                      |    ✅      |
+| 0.4 | Опционально: docker-compose с PostgreSQL            | Локальный запуск БД одной командой                       |    ✅      |
 
 
 **Выход:** БД создаётся через миграции, проект готов к разработке API.
@@ -108,10 +108,10 @@ docker run -d --name rockfile-keycloak --network rockfile-network -p 8081:8080 -
 
 | #     | Задача                                          | Результат                                  | Выполнение |
 | ----- | ----------------------------------------------- | ------------------------------------------ | ---------- |
-| 1.1.1 | `ContactCardCreate` — создание карточки         | Схема с обязательными/опциональными полями |            |
-| 1.1.2 | `ContactCardUpdate` — частичное обновление      | Все поля optional                          |            |
-| 1.1.3 | `ContactCardResponse` — ответ API               | Сериализация из ORM                        |            |
-| 1.1.4 | `ContactCardListResponse` — список с пагинацией | `items`, `total`, `page`, `per_page`       |            |
+| 1.1.1 | `ContactCardCreate` — создание карточки         | Схема с обязательными/опциональными полями |    ✅     |
+| 1.1.2 | `ContactCardUpdate` — частичное обновление      | Все поля optional                          |    ✅     |
+| 1.1.3 | `ContactCardResponse` — ответ API               | Сериализация из ORM                        |    ✅     |
+| 1.1.4 | `ContactCardListResponse` — список с пагинацией | `items`, `total`, `page`, `per_page`       |    ✅     |
 
 
 ### 1.2 Роутер контактов
@@ -119,11 +119,11 @@ docker run -d --name rockfile-keycloak --network rockfile-network -p 8081:8080 -
 
 | #     | Задача                                       | Результат                               | Выполнение |
 | ----- | -------------------------------------------- | --------------------------------------- | ---------- |
-| 1.2.1 | `GET /api/v1/contacts` — список с пагинацией | `page`, `per_page`, сортировка по имени |            |
-| 1.2.2 | `POST /api/v1/contacts` — создание           | Валидация, возврат созданной карточки   |            |
-| 1.2.3 | `GET /api/v1/contacts/{id}`                  | Карточка по ID, 404 при отсутствии      |            |
-| 1.2.4 | `PATCH /api/v1/contacts/{id}`                | Частичное обновление                    |            |
-| 1.2.5 | `DELETE /api/v1/contacts/{id}`               | Мягкое или жёсткое удаление             |            |
+| 1.2.1 | `GET /api/v1/contacts` — список с пагинацией | `page`, `per_page`, сортировка по имени |    ✅      |
+| 1.2.2 | `POST /api/v1/contacts` — создание           | Валидация, возврат созданной карточки   |    ✅      |
+| 1.2.3 | `GET /api/v1/contacts/{id}`                  | Карточка по ID, 404 при отсутствии      |    ✅      |
+| 1.2.4 | `PATCH /api/v1/contacts/{id}`                | Частичное обновление                    |    ✅      |
+| 1.2.5 | `DELETE /api/v1/contacts/{id}`               | Мягкое или жёсткое удаление             |    ✅      |
 
 
 ### 1.3 Сервисный слой (опционально на MVP)
@@ -131,7 +131,7 @@ docker run -d --name rockfile-keycloak --network rockfile-network -p 8081:8080 -
 
 | #     | Задача                             | Результат                               | Выполнение |
 | ----- | ---------------------------------- | --------------------------------------- | ---------- |
-| 1.3.1 | `ContactService` — обёртка над DAO | Централизация логики, проще тестировать |            |
+| 1.3.1 | `ContactService` — обёртка над DAO | Централизация логики, проще тестировать |    ✅      |
 
 
 ### 1.4 Интеграция
@@ -139,9 +139,9 @@ docker run -d --name rockfile-keycloak --network rockfile-network -p 8081:8080 -
 
 | #     | Задача                             | Результат                      | Выполнение |
 | ----- | ---------------------------------- | ------------------------------ | ---------- |
-| 1.4.1 | Подключить роутер в `fastapi_app`  | Маршруты доступны              |            |
-| 1.4.2 | Dependency injection для сессии БД | `get_db()` через `yield`       |            |
-| 1.4.3 | Глобальный обработчик ошибок       | 404, 422, 500 в едином формате |            |
+| 1.4.1 | Подключить роутер в `fastapi_app`  | Маршруты доступны              |    ✅      |
+| 1.4.2 | Dependency injection для сессии БД | `get_db()` через `yield`       |    ✅      |
+| 1.4.3 | Глобальный обработчик ошибок       | 404, 422, 500 в едином формате |    ✅      |
 
 
 **Выход:** Можно создавать, читать, обновлять и удалять карточки через Swagger/ReDoc.
@@ -157,8 +157,8 @@ docker run -d --name rockfile-keycloak --network rockfile-network -p 8081:8080 -
 
 | #     | Задача                                                            | Результат                                                                            | Выполнение |
 | ----- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------- |
-| 2.1.1 | `ContactLinkCreate`, `ContactLinkResponse`                        | Схемы для связей между контактами (contact_a, contact_b, relationship_type, context) |            |
-| 2.1.2 | `ContactInteractionCreate`, `ContactInteractionResponse`          | Схемы для взаимодействий                                                             |            |
+| 2.1.1 | `ContactLinkCreate`, `ContactLinkResponse`                        | Схемы для связей между контактами (contact_a, contact_b, relationship_type, context) |    ✅      |
+| 2.1.2 | `ContactInteractionCreate`, `ContactInteractionResponse`          | Схемы для взаимодействий                                                             |    ✅      |
 | 2.1.3 | Добавить `known_through_contact_id` в `ContactCard` (опционально) | Через кого познакомился                                                              |            |
 
 
@@ -167,11 +167,11 @@ docker run -d --name rockfile-keycloak --network rockfile-network -p 8081:8080 -
 
 | #     | Задача                                                     | Результат                                                    | Выполнение |
 | ----- | ---------------------------------------------------------- | ------------------------------------------------------------ | ---------- |
-| 2.2.1 | `GET/POST /api/v1/contacts/{id}/links`                     | Список связей контакта и добавление связи с другим контактом |            |
-| 2.2.2 | `PATCH/DELETE /api/v1/contacts/{id}/links/{link_id}`       | Редактирование и удаление связи                              |            |
+| 2.2.1 | `GET/POST /api/v1/contacts/{id}/links`                     | Список связей контакта и добавление связи с другим контактом |    ✅      |
+| 2.2.2 | `PATCH/DELETE /api/v1/contacts/{id}/links/{link_id}`       | Редактирование и удаление связи                              |    ✅      |
 | 2.2.3 | `GET /api/v1/links`                                        | Все связи (для визуализации графа)                           |            |
-| 2.2.4 | `GET/POST /api/v1/contacts/{id}/interactions`              | Список и добавление взаимодействий                           |            |
-| 2.2.5 | `PATCH/DELETE /api/v1/contacts/{id}/interactions/{int_id}` | Редактирование и удаление                                    |            |
+| 2.2.4 | `GET/POST /api/v1/contacts/{id}/interactions`              | Список и добавление взаимодействий                           |    ✅      |
+| 2.2.5 | `PATCH/DELETE /api/v1/contacts/{id}/interactions/{int_id}` | Редактирование и удаление                                    |    ✅      |
 
 
 ### 2.3 Бизнес-логика
@@ -179,10 +179,10 @@ docker run -d --name rockfile-keycloak --network rockfile-network -p 8081:8080 -
 
 | #     | Задача                                                                                                                               | Результат                                                      | Выполнение |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- | ---------- |
-| 2.3.1 | При добавлении Interaction обновлять `last_contact_at`, `last_contact_summary` у ContactCard                                         | Автоматическая актуализация карточки                           |            |
-| 2.3.2 | При добавлении Interaction с `promises` — агрегировать их в `ContactCard.promises` (с `interaction_id`, `direction`, `completed_at`) | Связь обещаний: Interaction = источник, Card = сводка активных |            |
-| 2.3.3 | Эндпоинт/действие для отметки обещания выполненным (удаление из Card или флаг `completed_at`)                                        | Обновление карточки без потери истории в Interaction           |            |
-| 2.3.4 | При запросе `GET /contacts/{id}` подгружать `links` (связанные контакты), `interactions`                                             | Полная карточка с графом связей                                |            |
+| 2.3.1 | При добавлении Interaction обновлять `last_contact_at`, `last_contact_summary` у ContactCard                                         | Автоматическая актуализация карточки                           |    ✅      |
+| 2.3.2 | При добавлении Interaction с `promises` — агрегировать их в `ContactCard.promises` (с `interaction_id`, `direction`, `completed_at`) | Связь обещаний: Interaction = источник, Card = сводка активных |    ✅      |
+| 2.3.3 | Эндпоинт/действие для отметки обещания выполненным (удаление из Card или флаг `completed_at`)                                        | Обновление карточки без потери истории в Interaction           |    ✅      |
+| 2.3.4 | При запросе `GET /contacts/{id}` подгружать `links` (связанные контакты), `interactions`                                             | Полная карточка с графом связей                                |    ✅      |
 
 
 **Выход:** Полноценная карточка с графом связей и историей контактов, корректная агрегация обещаний.

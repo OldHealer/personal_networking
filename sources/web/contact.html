@@ -6,6 +6,7 @@
     <title>Контакт — Rockfile</title>
     <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/assets/css/styles.css" />
+    <script src="/assets/js/strip-token-from-url.js"></script>
   </head>
   <body>
     <header class="site-header">
@@ -30,10 +31,7 @@
             <h1 id="contact-title">Контакт</h1>
           </div>
           <div class="page-actions">
-            <button id="btn-edit" class="button button-outline" type="button" style="display: none;">Редактировать</button>
-            <button id="btn-save" class="button" type="button" style="display: none;">Сохранить</button>
-            <button id="btn-cancel" class="button button-outline" type="button" style="display: none;">Отмена</button>
-            <button id="btn-delete" class="button" type="button" style="display: none;">Удалить</button>
+            <button id="btn-delete" class="button" type="button">Удалить контакт</button>
           </div>
         </div>
         <p id="auth-error" class="form-message" role="alert" style="display: none;"></p>
@@ -42,7 +40,7 @@
         <div id="contact-loading" class="muted">Загрузка...</div>
         <div id="contact-content" style="display: none;">
           <form id="contact-form" class="form contact-form-sections">
-            <section class="card form-card">
+            <section class="card form-card" data-contact-section="main">
               <h2>Основное</h2>
               <label class="field">
                 <span>Полное имя</span>
@@ -69,33 +67,25 @@
                   <option value="other">Другое</option>
                 </select>
               </label>
+              <div class="form-card-actions">
+                <p class="form-message section-message" data-section-message="main"></p>
+                <button type="button" class="button" data-save-section="main">Сохранить</button>
+              </div>
             </section>
 
-            <section class="card form-card">
-              <h2>Знакомство</h2>
+            <section class="card form-card" data-contact-section="notes">
+              <h2>Заметки</h2>
               <label class="field">
-                <span>Когда познакомились</span>
-                <input type="datetime-local" name="first_met_at" />
-              </label>
-              <label class="field">
-                <span>Место знакомства</span>
-                <input type="text" name="first_met_place" />
-              </label>
-              <label class="field">
-                <span>Обстоятельства</span>
-                <textarea name="first_met_context" rows="2"></textarea>
-              </label>
-            </section>
-
-            <section class="card form-card">
-              <h2>Проекты и заметки</h2>
-              <label class="field">
-                <span>Проекты, договорённости</span>
+                <span>Заметки</span>
                 <textarea name="projects_notes" rows="3" placeholder="Где познакомились / о чём договорились"></textarea>
               </label>
+              <div class="form-card-actions">
+                <p class="form-message section-message" data-section-message="notes"></p>
+                <button type="button" class="button" data-save-section="notes">Сохранить</button>
+              </div>
             </section>
 
-            <section class="card form-card">
+            <section class="card form-card" data-contact-section="personal">
               <h2>Личное</h2>
               <label class="field">
                 <span>Семейное положение</span>
@@ -113,9 +103,13 @@
                 <span>Интересы (каждое с новой строки)</span>
                 <textarea name="interests" rows="2"></textarea>
               </label>
+              <div class="form-card-actions">
+                <p class="form-message section-message" data-section-message="personal"></p>
+                <button type="button" class="button" data-save-section="personal">Сохранить</button>
+              </div>
             </section>
 
-            <section class="card form-card">
+            <section class="card form-card" data-contact-section="last_contact">
               <h2>Последний контакт</h2>
               <label class="field">
                 <span>Дата последнего контакта</span>
@@ -125,30 +119,14 @@
                 <span>Заметка о последнем контакте</span>
                 <textarea name="last_contact_summary" rows="2"></textarea>
               </label>
+              <div class="form-card-actions">
+                <p class="form-message section-message" data-section-message="last_contact"></p>
+                <button type="button" class="button" data-save-section="last_contact">Сохранить</button>
+              </div>
             </section>
 
-            <section class="card form-card">
-              <h2>Оценки и рекомендации</h2>
-              <label class="field">
-                <span>Оценка компетенций (1–5)</span>
-                <input type="number" name="competence_rating" min="1" max="5" />
-              </label>
-              <label class="field">
-                <span>Комментарий к оценке</span>
-                <textarea name="competence_notes" rows="2"></textarea>
-              </label>
-              <label class="field">
-                <span>Рекомендации и мнения</span>
-                <textarea name="recommendations" rows="2"></textarea>
-              </label>
-            </section>
-
-            <section class="card form-card">
+            <section class="card form-card" data-contact-section="plans">
               <h2>Планы и обещания</h2>
-              <label class="field">
-                <span>Обещания (каждое с новой строки)</span>
-                <textarea name="promises" rows="2"></textarea>
-              </label>
               <label class="field">
                 <span>Цели (каждое с новой строки)</span>
                 <textarea name="goals" rows="2"></textarea>
@@ -157,21 +135,86 @@
                 <span>Амбиции и планы</span>
                 <textarea name="ambitions" rows="2"></textarea>
               </label>
-            </section>
-
-            <section class="card form-card">
-              <h2>Соцсети (JSON)</h2>
-              <label class="field">
-                <span>Социальные сети и контакты</span>
-                <textarea name="socials" rows="3" placeholder='{"telegram": "@nick", "linkedin": "url"}'></textarea>
-              </label>
-            </section>
-
-            <section class="card form-card" id="contact-meta-section">
-              <h2>Служебное</h2>
-              <p class="muted"><span id="meta-created"></span> · <span id="meta-updated"></span></p>
+              <div class="field">
+                <span>Активные обещания</span>
+                <div id="promises-list" class="promises-list muted">
+                  <p id="promises-empty">Пока нет активных обещаний.</p>
+                  <ul id="promises-items"></ul>
+                </div>
+              </div>
+              <div class="form-card-actions">
+                <p class="form-message section-message" data-section-message="plans"></p>
+                <button type="button" class="button" data-save-section="plans">Сохранить</button>
+              </div>
             </section>
           </form>
+
+          <section class="card form-card">
+            <h2>Связи</h2>
+            <div id="links-list" class="links-list muted">
+              <p id="links-empty">Связей пока нет.</p>
+              <ul id="links-items"></ul>
+            </div>
+            <form id="link-form" class="form form-inline-compact link-form">
+              <label class="field link-form-field">
+                <span>Контакт</span>
+                <div class="contact-autocomplete">
+                  <input type="text" id="link-contact-search" placeholder="Поиск по имени или фамилии…" autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-controls="link-contact-suggestions" />
+                  <input type="hidden" name="contact_id_b" id="link-contact-id" required />
+                  <ul id="link-contact-suggestions" class="contact-suggestions" role="listbox" aria-hidden="true"></ul>
+                </div>
+              </label>
+              <label class="field link-form-field link-form-relationship">
+                <span>Тип связи</span>
+                <select name="relationship_type" required>
+                  <option value="friend">Друг</option>
+                  <option value="colleague">Коллега</option>
+                  <option value="spouse">Партнёр/супруг</option>
+                  <option value="parent">Родитель</option>
+                  <option value="child">Ребёнок</option>
+                  <option value="other">Другое</option>
+                </select>
+              </label>
+              <label class="field link-form-field">
+                <span>Контекст</span>
+                <input type="text" name="context" placeholder="Через кого познакомились, в каком проекте" />
+              </label>
+              <label class="field field-inline link-form-field link-form-directed">
+                <span>Направленная связь</span>
+                <input type="checkbox" name="is_directed" class="checkbox-link-directed" />
+              </label>
+              <p id="link-message" class="form-message"></p>
+              <button type="submit" class="button">Сохранить связь</button>
+            </form>
+          </section>
+
+          <section class="card form-card">
+            <h2>Взаимодействия</h2>
+            <div id="interactions-list" class="interactions-list muted">
+              <p id="interactions-empty">Пока нет зафиксированных взаимодействий.</p>
+              <ul id="interactions-items"></ul>
+            </div>
+            <form id="interaction-form" class="form form-inline-compact">
+              <label class="field">
+                <span>Когда</span>
+                <input type="datetime-local" name="occurred_at" required />
+              </label>
+              <label class="field">
+                <span>Канал</span>
+                <input type="text" name="channel" placeholder="встреча, звонок, чат..." />
+              </label>
+              <label class="field">
+                <span>Заметка</span>
+                <input type="text" name="notes" placeholder="О чём говорили / к чему договорились" />
+              </label>
+              <label class="field">
+                <span>Обещания (каждое с новой строки)</span>
+                <textarea name="promises" rows="2" placeholder="Позвонить через неделю&#10;Прислать презентацию"></textarea>
+              </label>
+              <p id="interaction-message" class="form-message"></p>
+              <button type="submit" class="button">Сохранить взаимодействие</button>
+            </form>
+          </section>
         </div>
       </div>
     </main>

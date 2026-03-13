@@ -15,22 +15,17 @@ const state = {
 
 const tokenKey = "access_token";
 
-/** Извлекает токен из hash после редиректа с логина и сохраняет в localStorage, затем убирает из URL */
+/** Извлекает токен из hash после редиректа с логина и сохраняет в localStorage, затем убирает из URL (fallback, если strip-token-from-url.js не сработал). */
 function applyTokenFromHash() {
   const hash = window.location.hash || "";
   const match = /(?:^|&)access_token=([^&]+)/.exec(hash);
   if (match) {
     try {
       const token = decodeURIComponent(match[1]);
-      if (token) {
-        localStorage.setItem(tokenKey, token);
-        const cleanHash = hash.replace(/(^|&)access_token=[^&]+/g, "").replace(/^&|&$/g, "");
-        const newUrl = cleanHash ? `${window.location.pathname}${window.location.search}#${cleanHash}` : window.location.pathname + window.location.search;
-        window.history.replaceState(null, "", newUrl);
-      }
-    } catch (e) {
-      // игнорируем ошибки парсинга
-    }
+      if (token) localStorage.setItem(tokenKey, token);
+    } catch (e) {}
+    // Всегда убираем токен из URL, даже если сохранение не удалось
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
   }
 }
 

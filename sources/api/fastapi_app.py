@@ -8,21 +8,24 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request, APIRouter
-from fastapi.responses import FileResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse, Response
-# from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
-# from fastapi.exceptions import RequestValidationError, HTTPException
+from fastapi.responses import HTMLResponse, Response
+from fastapi import HTTPException
 from pydantic import BaseModel, Field
 
 from api.data_base.models import Base
 from api.routers.v1.auth import auth_router
 from api.routers.v1.contacts import contacts_router
+from api.routers.v1.contact_links import contact_links_router
+from api.routers.v1.contact_interactions import contact_interactions_router
 from api.data_base.base import db
 from utils.db_bootstrap import ensure_database_exists, run_migrations
 from settings import config
 
-# setup_audit_logger_loguru(json_format=False)
+from utils.logger_loguru import setup_audit_logger_loguru, get_logger
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -33,45 +36,30 @@ async def lifespan(app: FastAPI):
     :return:
     """
     try:
+        # Иинициализируем логгер
+        setup_audit_logger_loguru(to_file=True, json_format=False, log_level="INFO")
+        log = get_logger()
+
         existed = await ensure_database_exists()
         alembic_ini_path = Path(config.alembic_path)
         if alembic_ini_path.exists():
             if existed:
-                print("БД существует. Применяю миграции...")
+                log.info("БД существует. Применяю миграции...")
             else:
-                print("БД отсутствовала. Создал БД и применяю миграции...")
+                log.info("БД отсутствовала. Создал БД и применяю миграции...")
             run_migrations()
         else:
             # Если миграций нет, создаем таблицы напрямую
-            print("Alembic не настроен. Создаю таблицы через SQLAlchemy.")
+            log.info("Alembic не настроен. Создаю таблицы через SQLAlchemy.")
             await db.init_models(base=Base)
-        # Инициализируем базу данных, если её нет - она будет создана со всеми таблицами
-        # if await db.check_connection():
-        #     print('Соединение с БД установлено, произвожу инициализацию таблиц')
-        #     await db.init_models(base=Base)
 
-        # logger.info('Проверяю наличие новых миграций')
-        # success = await check_and_upgrade(db)
-        # logger.info(f'Статус проверок и обновлений миграций: {success}')
-        # if not success:
-        #     raise RuntimeError("Миграции не удалось применить")
-
-        print(f'Приложение персонального нетворкинга запущено')
+        log.info(f'Приложение персонального нетворкинга запущено')
 
         # Регистрируем маршруты
-        # app.include_router(llm_public_router, prefix="/api/v1")
-        # app.include_router(plugin_public_router, prefix="/api/v1")
-        # app.include_router(llm_admin_router, prefix="/api/v1")
-        # app.include_router(plugin_admin_router, prefix="/api/v1")
-        # app.include_router(user_groups_router, prefix="/api/v1")
-        # app.include_router(sources_router, prefix="/api/v1")
-        # app.include_router(users_admin_router, prefix="/api/v1")
-        # app.include_router(worker_router, prefix="/api/v1")
-        # app.include_router(cluster_worker_router, prefix="/api/v1")
-        # app.include_router(llm_instance_router, prefix="/api/v1")
-        # app.include_router(auth_router, prefix="/api/v1")
-        # app.include_router(tokens_admin_router, prefix="/api/v1")
-        # app.include_router(tokens_public_router, prefix="/api/v1")
+        app.include_router(auth_router)
+        app.include_router(contacts_router)
+        app.include_router(contact_links_router)
+        app.include_router(contact_interactions_router)
 
         # Передача управления FastAPI
         yield
@@ -96,6 +84,67 @@ app = FastAPI(
     },
     lifespan=lifespan,  # Use the lifespan manager
 )
+
+
+# --- Единый формат ответов об ошибках (1.4.3) ---
+
+
+class ErrorDetail(BaseModel):
+    """Один элемент ошибки валидации (422)."""
+
+    loc: list[str] = Field(..., description="Путь к полю (например ['body', 'full_name'])")
+    msg: str = Field(..., description="Сообщение об ошибке")
+    type: str | None = Field(None, description="Тип ошибки Pydantic")
+
+
+class ErrorResponse(BaseModel):
+    """Единый формат ответа при ошибке."""
+
+    status_code: int = Field(..., description="HTTP-код ответа")
+    detail: str | list[ErrorDetail] = Field(..., description="Описание ошибки или список ошибок валидации")
+    error: str | None = Field(None, description="Код типа ошибки: validation_error, not_found, internal_error")
+
+
+def _error_json_response(status_code: int, detail: str | list, error: str | None = None) -> JSONResponse:
+    body = {"status_code": status_code, "detail": detail}
+    if error:
+        body["error"] = error
+    return JSONResponse(status_code=status_code, content=body)
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    """404, 403, 401 и прочие HTTP-ошибки — единый формат."""
+    detail = exc.detail
+    if isinstance(detail, (list, dict)):
+        detail = str(detail)
+    error_code = "not_found" if exc.status_code == 404 else None
+    return _error_json_response(exc.status_code, detail, error_code)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """422 — ошибки валидации (Pydantic) в едином формате."""
+    details = [
+        ErrorDetail(loc=[str(x) for x in err["loc"]], msg=err.get("msg", ""), type=err.get("type"))
+        for err in exc.errors()
+    ]
+    return _error_json_response(422, [d.model_dump() for d in details], "validation_error")
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """500 — необработанные исключения, единый формат, трейсбек в лог."""
+    traceback.print_exc()
+    return _error_json_response(
+        500,
+        "Internal server error",
+        "internal_error",
+    )
+
+
+# --- Статика и маршруты ---
+
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -185,7 +234,4 @@ async def root():
     }
 
 
-app.include_router(router)
-app.include_router(auth_router)
-app.include_router(contacts_router)
 

@@ -60,9 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       localStorage.setItem("access_token", data.access_token);
       setMessage("login-message", "Успешный вход.");
-      // Редирект с токеном в hash — на случай если localStorage не успевает сохраниться при навигации
-      const token = data.access_token;
-      window.location.replace(`/contacts.html#access_token=${encodeURIComponent(token)}`);
+      // Редирект без токена в URL — токен уже в localStorage; так браузер не показывает длинный hash в адресной строке
+      window.location.replace("/contacts.html");
     } catch (error) {
       setMessage("login-message", "Ошибка сети. Попробуйте позже.");
       window.location.href = "/error.html";

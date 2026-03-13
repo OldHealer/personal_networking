@@ -493,12 +493,6 @@ class ContactCard(Base):
     address: Mapped[str | None] = mapped_column(Text, doc="Адрес")
     phone: Mapped[str | None] = mapped_column(String(50), index=True, doc="Телефон")
     email: Mapped[str | None] = mapped_column(String(255), index=True, doc="Email")
-    socials: Mapped[dict | None] = mapped_column(JSON, default=dict, doc="Социальные сети и контакты в формате JSON",)
-
-    first_met_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), doc="Дата и время знакомства",)
-    first_met_place: Mapped[str | None] = mapped_column(String(255), doc="Место знакомства",)
-    first_met_context: Mapped[str | None] = mapped_column(Text, doc="Обстоятельства знакомства",)
-
     relationship_type: Mapped[str | None] = mapped_column(String(20), doc="Тип отношений: business/personal/other",)
     projects_notes: Mapped[str | None] = mapped_column(Text, doc="Проекты и договоренности",)
 
@@ -512,10 +506,6 @@ class ContactCard(Base):
     last_contact_summary: Mapped[str | None] = mapped_column(Text, doc="Краткая заметка о последнем контакте",)
 
     promises: Mapped[list | None] = mapped_column(JSON, default=list, doc="Обещания и упоминания (список)", )
-    recommendations: Mapped[str | None] = mapped_column(Text, doc="Рекомендации и мнения",)
-    competence_rating: Mapped[int | None] = mapped_column(Integer, doc="Оценка компетенций (1-5)",    )
-    competence_notes: Mapped[str | None] = mapped_column(Text, doc="Комментарий к оценке компетенций",    )
-
     goals: Mapped[list | None] = mapped_column(JSON, default=list, doc="Цели и амбиции (список)",)
     ambitions: Mapped[str | None] = mapped_column(Text, doc="Амбиции и планы",)
 
@@ -536,6 +526,7 @@ class ContactCard(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+
 
 
 class ContactFamilyMember(Base):
