@@ -31,12 +31,6 @@
             <h1>Контакты</h1>
             <p class="muted">Список карточек вашей личной сети.</p>
           </div>
-          <div class="page-header-actions">
-            <button form="contact-form" class="button button-header-action" type="submit">Сохранить</button>
-            <button id="refresh-contacts" class="button button-outline button-header-action" type="button" title="Заново загрузить список контактов с сервера">
-              Обновить
-            </button>
-          </div>
         </div>
         <p id="auth-error" class="form-message" role="alert" style="display: none;"></p>
 
@@ -55,12 +49,43 @@
               <span>Email</span>
               <input type="email" name="email" placeholder="ivan@example.com" />
             </label>
-            <label class="field">
-              <span>Заметка</span>
-              <input type="text" name="projects_notes" placeholder="Где познакомились / о чём договорились" />
-            </label>
             <p id="contact-message" class="form-message"></p>
+            <button class="button" type="submit">Сохранить</button>
           </form>
+        </section>
+
+        <section class="card form-card">
+          <h2>Подготовка к встрече (AI‑агент)</h2>
+          <form id="prepare-meeting-form" class="form form-inline-compact">
+            <label class="field">
+              <span>Контакт</span>
+              <div class="contact-autocomplete">
+                <input
+                  type="search"
+                  id="prepare-meeting-query"
+                  placeholder="Начните вводить имя или email…"
+                  autocomplete="off"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="prepare-meeting-suggestions"
+                />
+                <input type="hidden" id="prepare-meeting-contact-id" />
+                <ul
+                  id="prepare-meeting-suggestions"
+                  class="contact-suggestions"
+                  role="listbox"
+                  aria-hidden="true"
+                ></ul>
+              </div>
+            </label>
+            <div class="form-card-actions">
+              <p id="prepare-meeting-message" class="form-message section-message"></p>
+              <button id="prepare-meeting-button" class="button" type="button">
+                Подготовь меня к встрече
+              </button>
+            </div>
+          </form>
+          <div id="prepare-meeting-result" class="meeting-agent-result muted" style="white-space: pre-wrap;"></div>
         </section>
 
         <section class="contacts-list">
@@ -74,7 +99,6 @@
               <span>Сортировка</span>
               <select id="contacts-sort">
                 <option value="name">По имени</option>
-                <option value="last_contact_at">По последнему контакту</option>
                 <option value="created_at">По дате создания</option>
               </select>
             </label>

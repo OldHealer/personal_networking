@@ -120,16 +120,20 @@ class SMTPSettings(BaseModel):
 
 
 class TokensSettings(BaseModel):
-    """Настройки шифрования"""
+    """ Настройки шифрования """
     secret_key: SecretStr = Field(..., description="Секретная строка шифрования токена")
 
 
 class Audit(BaseModel):
-    """Настройки аудит-логирования"""
+    """ Настройки аудит-логирования """
     enabled: bool = Field(default=True, description="Флаг включения/отключения аудит-логирования")
     min_severity: int = Field(default=3, ge=0, le=10, description="Минимальный уровень серьезности для логирования (0-10). События с severity меньше этого значения не будут логироваться")
     rotation_interval: str = Field(default="7 days", description="Период ротации логов")
     retention_period: str = Field(default="30 days", description="Период хранения логов")
+
+
+# class LLMSettings(BaseModel):
+#     """ Настройки LLM """
 
 
 class Settings(BaseSettings):

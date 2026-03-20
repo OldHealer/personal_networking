@@ -336,11 +336,29 @@ a {
   margin: 0;
 }
 
+/* Подготовка к встрече: подтягиваем кнопку к полю "Контакт" */
+#prepare-meeting-form .form-card-actions {
+  margin-top: 0;
+}
+
+#prepare-meeting-form .form-card-actions .section-message {
+  min-height: 0;
+}
+
+/* Подравниваем высоту кнопки под высоту поля "Контакт" */
+#prepare-meeting-button {
+  min-height: 2.75rem;
+  padding: 0.6rem 1.6rem;
+  display: inline-flex;
+  align-items: center;
+}
+
 /* Единый объёмный стиль полей для всех форм (карточка контакта, Связи, Взаимодействия, добавление контакта) */
 .form-card .field input:not([type="checkbox"]):not([type="radio"]),
 .form-card .field select,
 .form-card .field textarea,
-.form-card .contact-autocomplete input[type="text"] {
+.form-card .contact-autocomplete input[type="text"],
+.form-card .contact-autocomplete input[type="search"] {
   min-height: 2.75rem;
   padding: 0.6rem 1rem;
   font-size: 1rem;
@@ -361,14 +379,16 @@ a {
 .form-card .field input:not([type="checkbox"]):not([type="radio"]):hover,
 .form-card .field select:hover,
 .form-card .field textarea:hover,
-.form-card .contact-autocomplete input[type="text"]:hover {
+.form-card .contact-autocomplete input[type="text"]:hover,
+.form-card .contact-autocomplete input[type="search"]:hover {
   border-color: #e3b089;
 }
 
 .form-card .field input:not([type="checkbox"]):not([type="radio"]):focus,
 .form-card .field select:focus,
 .form-card .field textarea:focus,
-.form-card .contact-autocomplete input[type="text"]:focus {
+.form-card .contact-autocomplete input[type="text"]:focus,
+.form-card .contact-autocomplete input[type="search"]:focus {
   outline: none;
   border-color: #c96c4b;
   box-shadow: 0 0 0 2px rgba(201, 108, 75, 0.2);
@@ -439,7 +459,8 @@ a {
   overflow: visible;
 }
 
-.contact-autocomplete input[type="text"] {
+.contact-autocomplete input[type="text"],
+.contact-autocomplete input[type="search"] {
   width: 100%;
   min-width: 200px;
   padding: 0.5rem 0.75rem;
@@ -449,7 +470,8 @@ a {
   box-sizing: border-box;
 }
 
-.contact-autocomplete input[type="text"]:focus {
+.contact-autocomplete input[type="text"]:focus,
+.contact-autocomplete input[type="search"]:focus {
   outline: 2px solid #e3b089;
   border-color: #c96c4b;
 }
@@ -635,4 +657,57 @@ a {
   height: 1px;
   background: #efe0d2;
   margin: 2rem 0;
+}
+
+.form-actions-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.button-small {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+.interactions-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.interaction-item {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid #efe0d2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.interaction-item:last-child {
+  border-bottom: none;
+}
+
+.interaction-item-content {
+  flex: 1 1 480px;
+  min-width: 0;
+}
+
+.interaction-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0;
+}
+
+.button-outline.button-delete {
+  color: #b42318;
+  border-color: #b42318;
+}
+
+.button-outline.button-delete:hover {
+  background: rgba(180, 35, 24, 0.08);
 }

@@ -16,16 +16,12 @@ class ContactCardBase(BaseModel):
     # Используем строку вместо enum, чтобы не падать на старых/нестандартных значениях.
     # На уровне БД по-прежнему храним строку с ожидаемыми значениями.
     relationship_type: str | None = Field(None, description="Тип отношений (business/personal/other или произвольная строка)")
-    projects_notes: str | None = Field(None, description="Проекты и договоренности")
 
     hobbies: list | None = Field(default_factory=list, description="Хобби (список)")
     interests: list | None = Field(default_factory=list, description="Интересы (список)")
 
     family_status: str | None = Field(None, description="Семейное положение")
     birthday: date | None = Field(None, description="День рождения")
-
-    last_contact_at: datetime | None = Field(None, description="Дата последнего контакта")
-    last_contact_summary: str | None = Field(None, description="Заметка о последнем контакте")
 
     promises: list | None = Field(default_factory=list, description="Обещания и упоминания (список агрегированных обещаний по всем взаимодействиям)")
     goals: list | None = Field(default_factory=list, description="Цели и амбиции (список)")
@@ -46,16 +42,12 @@ class ContactCardUpdate(BaseModel):
 
     # Для частичного обновления также принимаем произвольную строку/None без enum-валидации
     relationship_type: str | None = Field(None, description="Тип отношений (business/personal/other или произвольная строка)")
-    projects_notes: str | None = Field(None, description="Проекты и договоренности")
 
     hobbies: list | None = Field(None, description="Хобби (список)")
     interests: list | None = Field(None, description="Интересы (список)")
 
     family_status: str | None = Field(None, description="Семейное положение")
     birthday: date | None = Field(None, description="День рождения")
-
-    last_contact_at: datetime | None = Field(None, description="Дата последнего контакта")
-    last_contact_summary: str | None = Field(None, description="Заметка о последнем контакте")
 
     promises: list | None = Field(None, description="Обещания и упоминания (список агрегированных обещаний по всем взаимодействиям)")
     goals: list | None = Field(None, description="Цели и амбиции (список)")
@@ -84,6 +76,7 @@ class ContactCardResponse(ContactCardBase):
 
     id: UUID
     tenant_id: UUID | None = None
+    last_interaction_at: datetime | None = Field(None, description="Дата последнего взаимодействия")
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from api.data_base.models import Base
 from api.routers.v1.auth import auth_router
+from api.routers.v1.agents import agents_router
 from api.routers.v1.contacts import contacts_router
 from api.routers.v1.contact_links import contact_links_router
 from api.routers.v1.contact_interactions import contact_interactions_router
@@ -36,7 +37,7 @@ async def lifespan(app: FastAPI):
     :return:
     """
     try:
-        # Иинициализируем логгер
+        # Инициализация логгера
         setup_audit_logger_loguru(to_file=True, json_format=False, log_level="INFO")
         log = get_logger()
 
@@ -55,11 +56,12 @@ async def lifespan(app: FastAPI):
 
         log.info(f'Приложение персонального нетворкинга запущено')
 
-        # Регистрируем маршруты
+        # Регистрация маршрутов
         app.include_router(auth_router)
         app.include_router(contacts_router)
         app.include_router(contact_links_router)
         app.include_router(contact_interactions_router)
+        app.include_router(agents_router)
 
         # Передача управления FastAPI
         yield

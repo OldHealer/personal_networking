@@ -73,18 +73,6 @@
               </div>
             </section>
 
-            <section class="card form-card" data-contact-section="notes">
-              <h2>Заметки</h2>
-              <label class="field">
-                <span>Заметки</span>
-                <textarea name="projects_notes" rows="3" placeholder="Где познакомились / о чём договорились"></textarea>
-              </label>
-              <div class="form-card-actions">
-                <p class="form-message section-message" data-section-message="notes"></p>
-                <button type="button" class="button" data-save-section="notes">Сохранить</button>
-              </div>
-            </section>
-
             <section class="card form-card" data-contact-section="personal">
               <h2>Личное</h2>
               <label class="field">
@@ -96,8 +84,8 @@
                 <input type="date" name="birthday" />
               </label>
               <label class="field">
-                <span>Хобби (каждое с новой строки)</span>
-                <textarea name="hobbies" rows="2" placeholder="Спорт&#10;Музыка"></textarea>
+                <span>Заметки (каждое с новой строки)</span>
+                <textarea name="hobbies" rows="2" placeholder="Важно помнить о человеке&#10;Например: что ему интересно"></textarea>
               </label>
               <label class="field">
                 <span>Интересы (каждое с новой строки)</span>
@@ -109,45 +97,39 @@
               </div>
             </section>
 
-            <section class="card form-card" data-contact-section="last_contact">
-              <h2>Последний контакт</h2>
-              <label class="field">
-                <span>Дата последнего контакта</span>
-                <input type="datetime-local" name="last_contact_at" />
-              </label>
-              <label class="field">
-                <span>Заметка о последнем контакте</span>
-                <textarea name="last_contact_summary" rows="2"></textarea>
-              </label>
-              <div class="form-card-actions">
-                <p class="form-message section-message" data-section-message="last_contact"></p>
-                <button type="button" class="button" data-save-section="last_contact">Сохранить</button>
-              </div>
-            </section>
-
-            <section class="card form-card" data-contact-section="plans">
-              <h2>Планы и обещания</h2>
-              <label class="field">
-                <span>Цели (каждое с новой строки)</span>
-                <textarea name="goals" rows="2"></textarea>
-              </label>
-              <label class="field">
-                <span>Амбиции и планы</span>
-                <textarea name="ambitions" rows="2"></textarea>
-              </label>
-              <div class="field">
-                <span>Активные обещания</span>
-                <div id="promises-list" class="promises-list muted">
-                  <p id="promises-empty">Пока нет активных обещаний.</p>
-                  <ul id="promises-items"></ul>
-                </div>
-              </div>
-              <div class="form-card-actions">
-                <p class="form-message section-message" data-section-message="plans"></p>
-                <button type="button" class="button" data-save-section="plans">Сохранить</button>
-              </div>
-            </section>
           </form>
+
+          <section class="card form-card">
+            <h2>Взаимодействия</h2>
+            <div id="interactions-list" class="interactions-list muted">
+              <p id="interactions-empty">Пока нет зафиксированных взаимодействий.</p>
+              <ul id="interactions-items"></ul>
+            </div>
+            <h3 id="interaction-form-title">Добавить взаимодействие</h3>
+            <form id="interaction-form" class="form form-inline-compact">
+              <label class="field">
+                <span>Когда</span>
+                <input type="datetime-local" name="occurred_at" required />
+              </label>
+              <label class="field">
+                <span>Канал</span>
+                <input type="text" name="channel" placeholder="встреча, звонок, чат..." />
+              </label>
+              <label class="field">
+                <span>Заметка</span>
+                <input type="text" name="notes" placeholder="О чём говорили / к чему договорились" />
+              </label>
+              <label class="field">
+                <span>Обещания (каждое с новой строки)</span>
+                <textarea name="promises" rows="2" placeholder="Позвонить через неделю&#10;Прислать презентацию"></textarea>
+              </label>
+              <p id="interaction-message" class="form-message"></p>
+              <div class="form-actions-inline">
+                <button id="interaction-cancel-edit" type="button" class="button button-outline" hidden>Отменить</button>
+                <button id="interaction-submit-button" type="submit" class="button">Сохранить взаимодействие</button>
+              </div>
+            </form>
+          </section>
 
           <section class="card form-card">
             <h2>Связи</h2>
@@ -188,33 +170,30 @@
             </form>
           </section>
 
-          <section class="card form-card">
-            <h2>Взаимодействия</h2>
-            <div id="interactions-list" class="interactions-list muted">
-              <p id="interactions-empty">Пока нет зафиксированных взаимодействий.</p>
-              <ul id="interactions-items"></ul>
-            </div>
-            <form id="interaction-form" class="form form-inline-compact">
+          <form id="contact-plans-form" class="form contact-form-sections">
+            <section class="card form-card" data-contact-section="plans">
+              <h2>Планы и обещания</h2>
               <label class="field">
-                <span>Когда</span>
-                <input type="datetime-local" name="occurred_at" required />
+                <span>Цели (каждое с новой строки)</span>
+                <textarea name="goals" rows="2"></textarea>
               </label>
               <label class="field">
-                <span>Канал</span>
-                <input type="text" name="channel" placeholder="встреча, звонок, чат..." />
+                <span>Амбиции и планы</span>
+                <textarea name="ambitions" rows="2"></textarea>
               </label>
-              <label class="field">
-                <span>Заметка</span>
-                <input type="text" name="notes" placeholder="О чём говорили / к чему договорились" />
-              </label>
-              <label class="field">
-                <span>Обещания (каждое с новой строки)</span>
-                <textarea name="promises" rows="2" placeholder="Позвонить через неделю&#10;Прислать презентацию"></textarea>
-              </label>
-              <p id="interaction-message" class="form-message"></p>
-              <button type="submit" class="button">Сохранить взаимодействие</button>
-            </form>
-          </section>
+              <div class="field">
+                <span>Активные обещания</span>
+                <div id="promises-list" class="promises-list muted">
+                  <p id="promises-empty">Пока нет активных обещаний.</p>
+                  <ul id="promises-items"></ul>
+                </div>
+              </div>
+              <div class="form-card-actions">
+                <p class="form-message section-message" data-section-message="plans"></p>
+                <button type="button" class="button" data-save-section="plans">Сохранить</button>
+              </div>
+            </section>
+          </form>
         </div>
       </div>
     </main>

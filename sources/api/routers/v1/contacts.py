@@ -4,19 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger_loguru import get_logger
 from api.auth.deps import CurrentUser, get_current_user
 from api.data_base.base import get_db_session
-from api.schemas.contacts import (
-    ContactCardCreate,
-    ContactCardListResponse,
-    ContactCardResponse,
-    ContactCardUpdate,
-)
-from api.services.contacts_service import (
-    create_contact as create_contact_service,
-    delete_contact as delete_contact_service,
-    get_contact as get_contact_service,
-    list_contacts as list_contacts_service,
-    update_contact as update_contact_service,
-)
+from api.schemas.contacts import (ContactCardCreate, ContactCardListResponse, ContactCardResponse, ContactCardUpdate, )
+from api.services.contacts_service import (create_contact as create_contact_service,
+                                           delete_contact as delete_contact_service,
+                                           get_contact as get_contact_service, list_contacts as list_contacts_service,
+                                           update_contact as update_contact_service, )
 
 logger = get_logger()
 contacts_router = APIRouter(prefix="/api/v1/contacts", tags=["Contacts"])
@@ -26,7 +18,7 @@ contacts_router = APIRouter(prefix="/api/v1/contacts", tags=["Contacts"])
 async def list_contacts(
     page: int = Query(1, ge=1, description="Номер страницы"),
     per_page: int = Query(20, ge=1, le=100, description="Размер страницы"),
-    sort: str = Query("name", description="Сортировка: name|last_contact_at|created_at"),
+    sort: str = Query("name", description="Сортировка: name|created_at"),
     current_user: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):

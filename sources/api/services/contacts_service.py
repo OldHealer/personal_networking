@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.data_base.base import BaseDAO, contacts_dao
-from api.data_base.models import ContactCard, Tenant
+from api.data_base.models import ContactCard, ContactInteraction, Tenant
 from api.schemas.contacts import ContactCardCreate, ContactCardUpdate
 from utils.logger_loguru import get_logger
 
@@ -27,21 +27,28 @@ class ContactService:
 
     async def list_contacts( self, session: AsyncSession, tenant_id, page: int, per_page: int, sort: str, ):
         """Список контактов с пагинацией и сортировкой (логика поверх модели; DAO не поддерживает пагинацию)."""
-        logger.info(
-            "list_contacts called tenant_id={}, page={}, per_page={}, sort={}",
-            tenant_id,
-            page,
-            per_page,
-            sort,
+        last_interaction_subq = (
+            select(
+                ContactInteraction.contact_id.label("contact_id"),
+                func.max(ContactInteraction.occurred_at).label("last_interaction_at"),
+            )
+            .group_by(ContactInteraction.contact_id)
+            .subquery()
         )
+
         sort_map = {
             "name": ContactCard.full_name,
-            "last_contact_at": ContactCard.last_contact_at,
             "created_at": ContactCard.created_at,
         }
         sort_column = sort_map.get(sort, ContactCard.full_name)
 
-        base_stmt = _apply_tenant_filter(select(ContactCard), tenant_id)
+        base_stmt = _apply_tenant_filter(
+            select(ContactCard, last_interaction_subq.c.last_interaction_at).outerjoin(
+                last_interaction_subq,
+                ContactCard.id == last_interaction_subq.c.contact_id,
+            ),
+            tenant_id,
+        )
         count_stmt = _apply_tenant_filter(
             select(func.count()).select_from(ContactCard), tenant_id
         )
@@ -51,14 +58,15 @@ class ContactService:
         result = await session.execute(
             base_stmt.order_by(sort_column).offset(offset).limit(per_page)
         )
-        items = result.scalars().all()
-        logger.info(
-            "list_contacts done tenant_id={}, total={}, returned={}",
-            tenant_id,
-            total,
-            len(items),
-        )
+        rows = result.all()
+        items = []
+        for contact, last_interaction_at in rows:
+            # Поле вычисляемое (не хранится в ContactCard), нужно для миникарточек.
+            setattr(contact, "last_interaction_at", last_interaction_at)
+            items.append(contact)
+
         return items, total
+
 
     async def get_contact(self, session: AsyncSession, tenant_id, contact_id: str):
         """Получить контакт по ID.
@@ -66,14 +74,9 @@ class ContactService:
         Временно убираем строгую проверку tenant_id, чтобы контакты с «старыми»
         или некорректными tenant_id всё равно открывались в UI.
         """
-        logger.info("get_contact called tenant_id=%s, contact_id=%s", tenant_id, contact_id)
         contact = await self.dao.get_by_id(contact_id, session=session)
         if contact is None:
-            logger.warning("get_contact not found contact_id=%s (tenant_id=%s)", contact_id, tenant_id)
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
-            )
-        logger.info("get_contact success contact_id=%s, tenant_id_in_contact=%s", contact_id, contact.tenant_id)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
         return contact
 
     async def create_contact(
@@ -87,11 +90,6 @@ class ContactService:
         Если tenant_id у пользователя указывает на несуществующего арендатора,
         создаём такого арендатора автоматически, чтобы не получать FK-ошибку.
         """
-        logger.info(
-            "create_contact called tenant_id=%s, payload=%s",
-            tenant_id,
-            payload.model_dump(),
-        )
         data = payload.model_dump()
 
         resolved_tenant_id = tenant_id
@@ -100,20 +98,14 @@ class ContactService:
             result = await session.execute(stmt)
             tenant = result.scalar_one_or_none()
             if tenant is None:
-                logger.warning(
-                    "create_contact: tenant %s not found, creating auto-tenant", tenant_id
-                )
                 tenant = Tenant(id=tenant_id, name="Auto-created tenant")
                 session.add(tenant)
                 await session.flush()
         data["tenant_id"] = resolved_tenant_id
         contact = await self.dao.create(data, session=session)
-        logger.info(
-            "create_contact success tenant_id=%s, contact_id=%s",
-            tenant_id,
-            getattr(contact, "id", None),
-        )
+
         return contact
+
 
     async def update_contact(
         self,
@@ -148,16 +140,8 @@ class ContactService:
         contact_id: str,
     ):
         """Удалить контакт с проверкой tenant."""
-        logger.info(
-            "delete_contact called tenant_id=%s, contact_id=%s", tenant_id, contact_id
-        )
-        await self.get_contact(
-            session=session, tenant_id=tenant_id, contact_id=contact_id
-        )
+        await self.get_contact(session=session, tenant_id=tenant_id, contact_id=contact_id)
         await self.dao.delete(contact_id, session=session)
-        logger.info(
-            "delete_contact success tenant_id=%s, contact_id=%s", tenant_id, contact_id
-        )
         return None
 
 

@@ -81,9 +81,7 @@ function toDateOnly(iso) {
 
 const CONTACT_SECTION_FIELDS = {
   main: ["full_name", "phone", "email", "address", "relationship_type"],
-  notes: ["projects_notes"],
   personal: ["family_status", "birthday", "hobbies", "interests"],
-  last_contact: ["last_contact_at", "last_contact_summary"],
   plans: ["goals", "ambitions"],
 };
 
@@ -103,8 +101,6 @@ function fromFormDataForKeys(form, keysSet) {
         payload[key] = v;
       }
       // если значение невалидно или пустое — не отправляем поле в PATCH
-    } else if (key === "first_met_at" || key === "last_contact_at") {
-      payload[key] = value ? new Date(value).toISOString() : null;
     } else if (key === "birthday") {
       payload[key] = value || null;
     } else {
@@ -128,13 +124,10 @@ function contactToFormValues(c) {
     email: c.email ?? "",
     address: c.address ?? "",
     relationship_type: rel,
-    projects_notes: c.projects_notes ?? "",
     family_status: c.family_status ?? "",
     birthday: toDateOnly(c.birthday),
     hobbies: listToText(c.hobbies),
     interests: listToText(c.interests),
-    last_contact_at: toDatetimeLocal(c.last_contact_at),
-    last_contact_summary: c.last_contact_summary ?? "",
     goals: listToText(c.goals),
     ambitions: c.ambitions ?? "",
   };
@@ -147,6 +140,14 @@ function fillForm(form, values) {
   }
 }
 
+function fillContactForms(values) {
+  const contactForm = document.getElementById("contact-form");
+  if (contactForm) fillForm(contactForm, values);
+
+  const plansForm = document.getElementById("contact-plans-form");
+  if (plansForm) fillForm(plansForm, values);
+}
+
 function updateContactTitle(contact) {
   const titleEl = document.getElementById("contact-title");
   if (titleEl && contact) {
@@ -157,6 +158,8 @@ function updateContactTitle(contact) {
 let currentContact = null;
 let currentLinks = [];
 let currentInteractions = [];
+let editingInteractionId = null;
+let editingInteractionPromises = [];
 
 async function fetchContact(id) {
   const token = getToken();
@@ -271,6 +274,88 @@ function renderLinks() {
   });
 }
 
+function interactionPromisesToText(promises) {
+  if (!Array.isArray(promises) || !promises.length) return "";
+  return promises
+    .map((p) => (typeof p === "string" ? p : p?.text || ""))
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildInteractionPromisesFromText(rawText, previousPromises = []) {
+  const lines = String(rawText || "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  return lines.map((line, index) => {
+    const previous = previousPromises[index];
+    if (previous && typeof previous === "object" && !Array.isArray(previous)) {
+      return { ...previous, text: line };
+    }
+    return line;
+  });
+}
+
+function resetInteractionForm() {
+  const form = document.getElementById("interaction-form");
+  const titleEl = document.getElementById("interaction-form-title");
+  const submitBtn = document.getElementById("interaction-submit-button");
+  const cancelBtn = document.getElementById("interaction-cancel-edit");
+
+  editingInteractionId = null;
+  editingInteractionPromises = [];
+
+  if (form) form.reset();
+  if (titleEl) titleEl.textContent = "Добавить взаимодействие";
+  if (submitBtn) submitBtn.textContent = "Сохранить взаимодействие";
+  if (cancelBtn) cancelBtn.hidden = true;
+  setMessage("interaction-message", "");
+}
+
+async function withAnchoredScroll(el, asyncFn) {
+  if (!el) return await asyncFn();
+  const beforeTop = el.getBoundingClientRect().top;
+  const result = await asyncFn();
+
+  // Ждём следующий кадр, чтобы layout успел обновиться после DOM-изменений.
+  await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+  const afterTop = el.getBoundingClientRect().top;
+  const delta = afterTop - beforeTop;
+  if (Math.abs(delta) > 0.5) window.scrollBy({ top: delta });
+  return result;
+}
+
+function startEditingInteraction(interaction) {
+  const form = document.getElementById("interaction-form");
+  const titleEl = document.getElementById("interaction-form-title");
+  const submitBtn = document.getElementById("interaction-submit-button");
+  const cancelBtn = document.getElementById("interaction-cancel-edit");
+
+  if (!form || !interaction) return;
+
+  editingInteractionId = String(interaction.id);
+  editingInteractionPromises = Array.isArray(interaction.promises) ? interaction.promises : [];
+
+  form.elements.occurred_at.value = toDatetimeLocal(interaction.occurred_at);
+  form.elements.channel.value = interaction.channel ?? "";
+  form.elements.notes.value = interaction.notes ?? "";
+  form.elements.promises.value = interactionPromisesToText(editingInteractionPromises);
+
+  if (titleEl) titleEl.textContent = "Редактировать взаимодействие";
+  if (submitBtn) submitBtn.textContent = "Сохранить изменения";
+  if (cancelBtn) cancelBtn.hidden = false;
+
+  setMessage("interaction-message", "Режим редактирования включён.");
+  // Не двигаем прокрутку, если форма "Взаимодействия" уже видима.
+  const viewportH = window.innerHeight || document.documentElement.clientHeight;
+  const rect = form.getBoundingClientRect();
+  const padding = 80;
+  const isInView = rect.top >= -padding && rect.bottom <= viewportH + padding;
+  if (!isInView) form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function renderInteractions() {
   const listEl = document.getElementById("interactions-items");
   const emptyEl = document.getElementById("interactions-empty");
@@ -294,10 +379,31 @@ function renderInteractions() {
       .map((p) => (typeof p === "string" ? p : p.text || JSON.stringify(p)))
       .join("; ");
     li.innerHTML = `
-      <div><strong>${dt || "Без даты"}</strong>${channel ? ` · ${channel}` : ""}</div>
-      ${notes ? `<div>${notes}</div>` : ""}
-      ${promisesText ? `<div class="muted">Обещания: ${promisesText}</div>` : ""}
+      <div class="interaction-item-content">
+        <div><strong>${escapeHtml(dt || "Без даты")}</strong>${channel ? ` · ${escapeHtml(channel)}` : ""}</div>
+        ${notes ? `<div>${escapeHtml(notes)}</div>` : ""}
+        ${promisesText ? `<div class="muted">Обещания: ${escapeHtml(promisesText)}</div>` : ""}
+      </div>
     `;
+
+    const actions = document.createElement("div");
+    actions.className = "interaction-item-actions";
+
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "button button-small button-outline";
+    editBtn.textContent = "Редактировать";
+    editBtn.addEventListener("click", () => startEditingInteraction(it));
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "button button-small button-outline button-delete";
+    deleteBtn.textContent = "Удалить";
+    deleteBtn.addEventListener("click", () => deleteInteraction(it.id));
+
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+    li.appendChild(actions);
     listEl.appendChild(li);
   });
 }
@@ -322,10 +428,7 @@ async function loadContact() {
       return;
     }
     currentContact = contact;
-    const form = document.getElementById("contact-form");
-    if (form) {
-      fillForm(form, contactToFormValues(contact));
-    }
+    fillContactForms(contactToFormValues(contact));
     updateContactTitle(contact);
     loadingEl.style.display = "none";
     contentEl.style.display = "block";
@@ -348,12 +451,12 @@ function setSectionMessage(sectionKey, text) {
   }
 }
 
-async function saveContactSection(sectionKey) {
+async function saveContactSection(sectionKey, triggerEl) {
   const id = getContactId();
   if (!id || !currentContact) return;
   const fields = CONTACT_SECTION_FIELDS[sectionKey];
   if (!fields || !fields.length) return;
-  const form = document.getElementById("contact-form");
+  const form = triggerEl?.closest("form") || document.getElementById("contact-form");
   const keysSet = new Set(fields);
   const payload = fromFormDataForKeys(form, keysSet);
   if ("relationship_type" in payload && (payload.relationship_type === null || payload.relationship_type === "")) {
@@ -377,7 +480,7 @@ async function saveContactSection(sectionKey) {
   }
   const updated = await response.json();
   currentContact = updated;
-  fillForm(form, contactToFormValues(updated));
+  fillContactForms(contactToFormValues(updated));
   updateContactTitle(updated);
   setSectionMessage(sectionKey, "Сохранено.");
   setTimeout(() => setSectionMessage(sectionKey, ""), 2000);
@@ -688,7 +791,7 @@ async function createLink(event) {
   await fetchLinks();
 }
 
-async function createInteraction(event) {
+async function saveInteraction(event) {
   event.preventDefault();
   const id = getContactId();
   const token = getToken();
@@ -698,25 +801,31 @@ async function createInteraction(event) {
   }
   const form = event.target;
   const fd = new FormData(form);
-  const promisesRaw = String(fd.get("promises") || "");
-  const promises = promisesRaw
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const promises = buildInteractionPromisesFromText(fd.get("promises"), editingInteractionPromises);
   const occurredRaw = fd.get("occurred_at");
   const payload = {
     occurred_at: occurredRaw ? new Date(occurredRaw).toISOString() : new Date().toISOString(),
     channel: String(fd.get("channel") || "").trim() || null,
     notes: String(fd.get("notes") || "").trim() || null,
     promises,
-    mentions: [],
   };
-  setMessage("interaction-message", "Сохраняем взаимодействие...");
-  const response = await fetch(`/api/v1/contacts/${id}/interactions`, {
-    method: "POST",
-    headers: apiHeaders(),
-    body: JSON.stringify(payload),
-  });
+
+  if (!editingInteractionId) {
+    payload.mentions = [];
+  }
+
+  const isEdit = Boolean(editingInteractionId);
+  setMessage("interaction-message", isEdit ? "Сохраняем изменения..." : "Сохраняем взаимодействие...");
+  const response = await fetch(
+    isEdit
+      ? `/api/v1/contacts/${id}/interactions/${editingInteractionId}`
+      : `/api/v1/contacts/${id}/interactions`,
+    {
+      method: isEdit ? "PATCH" : "POST",
+      headers: apiHeaders(),
+      body: JSON.stringify(payload),
+    }
+  );
   if (response.status === 401) {
     handleUnauthorized(response);
     return;
@@ -726,10 +835,51 @@ async function createInteraction(event) {
     setMessage("interaction-message", `Ошибка: ${text}`);
     return;
   }
-  form.reset();
-  setMessage("interaction-message", "Взаимодействие добавлено.");
-  setTimeout(() => setMessage("interaction-message", ""), 2000);
-  await Promise.all([loadContact(), fetchInteractions()]);
+  const anchorEl = document.getElementById("interaction-form");
+  await withAnchoredScroll(anchorEl, async () => {
+    resetInteractionForm();
+    setMessage("interaction-message", isEdit ? "Взаимодействие обновлено." : "Взаимодействие добавлено.");
+    setTimeout(() => setMessage("interaction-message", ""), 2000);
+    await Promise.all([loadContact(), fetchInteractions()]);
+  });
+}
+
+async function deleteInteraction(interactionId) {
+  const id = getContactId();
+  const token = getToken();
+  if (!id || !token) {
+    window.location.href = "/login.html";
+    return;
+  }
+  if (!interactionId) return;
+  if (!confirm("Удалить это взаимодействие?")) return;
+
+  const isDeletingCurrentEdit = editingInteractionId != null && String(editingInteractionId) === String(interactionId);
+  const anchorEl = document.getElementById("interaction-form");
+
+  await withAnchoredScroll(anchorEl, async () => {
+    setMessage("interaction-message", "Удаляем взаимодействие...");
+    const response = await fetch(`/api/v1/contacts/${id}/interactions/${interactionId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.status === 401) {
+      handleUnauthorized(response);
+      return;
+    }
+
+    if (response.status === 204 || response.ok) {
+      if (isDeletingCurrentEdit) resetInteractionForm();
+      setMessage("interaction-message", "Взаимодействие удалено.");
+      setTimeout(() => setMessage("interaction-message", ""), 2000);
+      await fetchInteractions();
+      return;
+    }
+
+    const text = await response.text();
+    setMessage("interaction-message", `Ошибка удаления: ${text}`);
+  });
 }
 
 async function completePromise(promiseId) {
@@ -771,7 +921,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!btn) return;
     e.preventDefault();
     const sectionKey = btn.getAttribute("data-save-section");
-    if (sectionKey) saveContactSection(sectionKey);
+    if (sectionKey) saveContactSection(sectionKey, btn);
   });
 
   const linkForm = document.getElementById("link-form");
@@ -782,7 +932,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const interactionForm = document.getElementById("interaction-form");
   if (interactionForm) {
-    interactionForm.addEventListener("submit", createInteraction);
+    interactionForm.addEventListener("submit", saveInteraction);
+  }
+
+  const interactionCancelBtn = document.getElementById("interaction-cancel-edit");
+  if (interactionCancelBtn) {
+    interactionCancelBtn.addEventListener("click", resetInteractionForm);
   }
 
   loadContact();
