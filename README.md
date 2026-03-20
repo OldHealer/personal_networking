@@ -2,19 +2,20 @@
 
 > **A personal contact and card-making system inspired by the Rockefeller card index, powered by AI.**
 
-![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.128-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Pydantic v2](https://img.shields.io/badge/Pydantic-v2-E92063?style=for-the-badge&logo=pydantic&logoColor=white)
-![SQLAlchemy 2.0](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)  
-![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![Keycloak OIDC](https://img.shields.io/badge/Keycloak-OIDC-5B68A3?style=for-the-badge&logo=keycloak&logoColor=white)
-![Poetry](https://img.shields.io/badge/Poetry-deps-60A5FA?style=for-the-badge&logo=poetry&logoColor=white)
-![LangGraph](https://img.shields.io/badge/LangGraph-agents-8e4c34?style=for-the-badge&labelColor=f7f2eb)
-![Ollama](https://img.shields.io/badge/Ollama-local%20LLM-000000?style=for-the-badge&logo=ollama&logoColor=white)  
-![Stack](https://img.shields.io/badge/stack-FastAPI%20%7C%20PostgreSQL%20%7C%20Keycloak-8e4c34?style=for-the-badge&labelColor=f7f2eb)
-![Frontend](https://img.shields.io/badge/frontend-HTML%20%2B%20CSS%20%2B%20JS-e3b089?style=for-the-badge&labelColor=2b2a27)
-![Status](https://img.shields.io/badge/status-MVP_in_progress-e3b089?style=for-the-badge&labelColor=2b2a27)
+<!-- Badges: left = brand color, right = neutral gray. Needs https://img.shields.io in preview. -->
+
+![Python](https://img.shields.io/static/v1?label=Python&message=3.12&logo=python&logoColor=white&labelColor=3776AB&color=6A737D&style=for-the-badge)
+![FastAPI](https://img.shields.io/static/v1?label=FastAPI&message=0.128&logo=fastapi&logoColor=white&labelColor=009688&color=6A737D&style=for-the-badge)
+![Pydantic](https://img.shields.io/static/v1?label=Pydantic&message=v2&logo=pydantic&logoColor=white&labelColor=E92063&color=6A737D&style=for-the-badge)
+![SQLAlchemy](https://img.shields.io/static/v1?label=SQLAlchemy&message=2.0&logo=sqlalchemy&logoColor=white&labelColor=D71F00&color=6A737D&style=for-the-badge)
+![PostgreSQL](https://img.shields.io/static/v1?label=PostgreSQL&message=16&logo=postgresql&logoColor=white&labelColor=4169E1&color=6A737D&style=for-the-badge)  
+![Docker](https://img.shields.io/static/v1?label=Docker&message=Compose&logo=docker&logoColor=white&labelColor=2496ED&color=6A737D&style=for-the-badge)
+![Keycloak](https://img.shields.io/static/v1?label=Keycloak&message=OIDC&logo=keycloak&logoColor=white&labelColor=5B68A3&color=6A737D&style=for-the-badge)
+![Poetry](https://img.shields.io/static/v1?label=Poetry&message=deps&logo=poetry&logoColor=white&labelColor=60A5FA&color=6A737D&style=for-the-badge)
+![LangGraph](https://img.shields.io/static/v1?label=LangGraph&message=agents&labelColor=8e4c34&logoColor=white&color=6A737D&style=for-the-badge)
+![Ollama](https://img.shields.io/static/v1?label=Ollama&message=local%20LLM&logo=ollama&logoColor=white&labelColor=111111&color=6A737D&style=for-the-badge)  
+![Frontend](https://img.shields.io/static/v1?label=UI&message=HTML%20%2B%20CSS%20%2B%20JS&labelColor=c96c4b&logoColor=white&color=6A737D&style=for-the-badge)
+![Status](https://img.shields.io/static/v1?label=status&message=MVP%20in%20progress&labelColor=c96c4b&logoColor=white&color=6A737D&style=for-the-badge)
 
 ---
 
