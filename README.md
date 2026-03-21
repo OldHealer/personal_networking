@@ -41,37 +41,6 @@
 | Agents | LangGraph, langchain-ollama, FastMCP (tools/MCP server) |
 | Frontend | Classic HTML/CSS/JS under `sources/web/`, served by FastAPI |
 
-## Quick start
-
-### With Docker Compose
-
-From the repository root:
-
-```bash
-docker compose up --build
-```
-
-Typical ports:
-
-| Service | URL / port |
-|---------|------------|
-| API + web | http://localhost:8000 |
-| API docs | http://localhost:8000/api/docs |
-| PostgreSQL | `localhost:5532` → container `5432` |
-| Keycloak | http://localhost:8181 |
-
-Environment variables follow `sources/settings.py` (prefixes like `DATABASE__…`, `KEYCLOAK__…`). The compose file sets defaults for local dev.
-
-### Local Python (Poetry)
-
-Requires **Python 3.12+**, PostgreSQL, and Keycloak configured like in compose.
-
-```bash
-poetry install
-poetry run python sources/main.py
-```
-
-`PYTHONPATH` should include `sources` (the Docker image sets `PYTHONPATH=/app/sources`).
 
 ### AI / Ollama (optional)
 
