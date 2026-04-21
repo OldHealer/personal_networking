@@ -6,10 +6,11 @@
 
 body {
   margin: 0;
-  font-family: "Segoe UI", "Arial", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Arial, sans-serif;
   color: #2b2a27;
   background: #f7f2eb;
   line-height: 1.6;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 a {
@@ -320,7 +321,7 @@ a {
 }
 
 .form-card {
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .form-card-actions {
@@ -421,11 +422,16 @@ a {
   margin: 0;
 }
 
+/* occurred_at | channel */
 .form-inline-compact .field:nth-child(1) { grid-column: 1; grid-row: 1; }
 .form-inline-compact .field:nth-child(2) { grid-column: 2; grid-row: 1; }
-.form-inline-compact .field:nth-child(3) { grid-column: 1; grid-row: 2; }
-.form-inline-compact .field:nth-child(4) { grid-column: 2; grid-row: 2; }
-.form-inline-compact .form-message { grid-column: 1 / -1; grid-row: 3; }
+/* notes — полная ширина */
+.form-inline-compact .field:nth-child(3) { grid-column: 1 / -1; grid-row: 2; }
+/* promises_mine | promises_theirs */
+.form-inline-compact .field:nth-child(4) { grid-column: 1; grid-row: 3; }
+.form-inline-compact .field:nth-child(5) { grid-column: 2; grid-row: 3; }
+.form-inline-compact .form-message { grid-column: 1 / -1; grid-row: 4; }
+.form-inline-compact .form-actions-inline { grid-column: 1 / -1; }
 
 @media (max-width: 640px) {
   .form-inline-compact {
@@ -434,10 +440,110 @@ a {
   .form-inline-compact .field:nth-child(1),
   .form-inline-compact .field:nth-child(2),
   .form-inline-compact .field:nth-child(3),
-  .form-inline-compact .field:nth-child(4) {
+  .form-inline-compact .field:nth-child(4),
+  .form-inline-compact .field:nth-child(5) {
     grid-column: 1;
     grid-row: auto;
   }
+}
+
+/* ---------------------------------------------------------------
+   Лейаут страницы контакта
+--------------------------------------------------------------- */
+
+/* Вертикальный контейнер всех блоков с равными отступами */
+.contact-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Горизонтальная строка из двух карточек одинаковой высоты */
+.contact-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+  margin: 0;
+}
+
+/* Карточки внутри строки — flex-колонка чтобы кнопка прижималась к низу */
+.contact-row .form-card {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-row .form-card-actions {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+/* Одиночная карточка не в строке (например, Связи) */
+.contact-layout > .form-card {
+  margin-bottom: 0;
+}
+
+/* Внутренние поля в form-карточке (contact-plans-form) */
+.inner-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+.inner-form .form-card-actions {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .contact-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Заголовки карточек */
+.card-title {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2b2a27;
+}
+
+.form-subtitle {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #6d5a48;
+}
+
+/* Разделитель (оставляем на случай использования) */
+.section-divider {
+  height: 1px;
+  background: #efe0d2;
+  margin: 1.5rem 0;
+}
+
+/* Метки направления обещаний */
+.promise-direction {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  margin-right: 0.25rem;
+}
+
+.promise-direction--mine {
+  background: #e8f4ea;
+  color: #2d7a3a;
+}
+
+.promise-direction--theirs {
+  background: #fdf0e8;
+  color: #8e4c34;
 }
 
 .contacts-search-wrap input {
@@ -710,4 +816,426 @@ a {
 
 .button-outline.button-delete:hover {
   background: rgba(180, 35, 24, 0.08);
+}
+
+.links-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.link-item {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid #efe0d2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.link-item:last-child {
+  border-bottom: none;
+}
+
+.link-item-content {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.link-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.button-danger {
+  background: #b42318;
+}
+
+.button-danger:hover {
+  background: #922018;
+}
+
+/* plans-column — убираем верхний отступ form */
+.plans-column {
+  gap: 1rem;
+}
+
+.promises-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+
+.promise-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.6rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid #efe0d2;
+  font-size: 0.95rem;
+}
+
+.promise-item:last-child {
+  border-bottom: none;
+}
+
+/* ---------------------------------------------------------------
+   Отступ между AI-агентом и списком контактов
+--------------------------------------------------------------- */
+.contacts-list {
+  margin-top: 2rem;
+}
+
+/* ---------------------------------------------------------------
+   Плашки контактов — тип отношений
+--------------------------------------------------------------- */
+.contact-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.contact-card-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.contact-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: #f0e2d2;
+  color: #6d5a48;
+}
+
+.contact-badge--business,
+.contact-badge--colleague,
+.contact-badge--client,
+.contact-badge--partner,
+.contact-badge--mentor,
+.contact-badge--mentee {
+  background: #deeaf8;
+  color: #2a5a8a;
+}
+
+.contact-badge--personal,
+.contact-badge--friend,
+.contact-badge--acquaintance,
+.contact-badge--family {
+  background: #ddf2e5;
+  color: #2a7a4a;
+}
+
+.contact-card-footer {
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #efe0d2;
+  font-size: 0.82rem;
+  color: #6d5a48;
+}
+
+.contact-last-seen {
+  color: #8e4c34;
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------------
+   Кнопка переключения темы
+--------------------------------------------------------------- */
+.theme-toggle {
+  background: transparent;
+  border: 1px solid #e2d0bf;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  color: inherit;
+}
+
+.theme-toggle:hover {
+  background: #f0e2d2;
+  border-color: #c96c4b;
+}
+
+/* ---------------------------------------------------------------
+   Тёмная тема
+--------------------------------------------------------------- */
+[data-theme="dark"] body {
+  background: #1a1714;
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .site-header {
+  background: #1f1c18;
+  border-color: #362f29;
+}
+
+[data-theme="dark"] .card {
+  background: #242019;
+  border-color: #3a3028;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .card:hover {
+  border-color: #e07a58;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .nav-link:hover {
+  background: #302a24;
+}
+
+[data-theme="dark"] .nav-link.is-active {
+  background: #5a3a28;
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .muted,
+[data-theme="dark"] .contact-meta,
+[data-theme="dark"] .text-muted {
+  color: #9e8878;
+}
+
+[data-theme="dark"] .button {
+  background: #e07a58;
+}
+
+[data-theme="dark"] .button:hover {
+  background: #c96c4b;
+}
+
+[data-theme="dark"] .button-outline {
+  color: #e2d8d0;
+  border-color: #6a5a50;
+}
+
+[data-theme="dark"] .button-outline:hover {
+  background: rgba(226, 216, 208, 0.1);
+  border-color: #e2d8d0;
+}
+
+[data-theme="dark"] .button-danger {
+  background: #c0392b;
+}
+
+[data-theme="dark"] .button-danger:hover {
+  background: #a93226;
+}
+
+[data-theme="dark"] .button-outline.button-delete {
+  color: #e2d8d0;
+  border-color: #6a5a50;
+}
+
+[data-theme="dark"] .button-outline.button-delete:hover {
+  background: rgba(232, 112, 112, 0.12);
+  border-color: #e87070;
+  color: #e87070;
+}
+
+[data-theme="dark"] .interaction-item,
+[data-theme="dark"] .link-item {
+  border-color: #3a3028;
+}
+
+[data-theme="dark"] .form-card .field input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] .form-card .field select,
+[data-theme="dark"] .form-card .field textarea,
+[data-theme="dark"] .form-card .contact-autocomplete input {
+  background: #1f1c18;
+  border-color: #4a3e34;
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .form-card .field input:focus,
+[data-theme="dark"] .form-card .field select:focus,
+[data-theme="dark"] .form-card .field textarea:focus {
+  border-color: #e07a58;
+  box-shadow: 0 0 0 2px rgba(224, 122, 88, 0.25);
+}
+
+[data-theme="dark"] .field input,
+[data-theme="dark"] .field select,
+[data-theme="dark"] .field textarea {
+  background: #1f1c18;
+  border-color: #4a3e34;
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .contact-suggestions {
+  background: #242019;
+  border-color: #3a3028;
+}
+
+[data-theme="dark"] .contact-suggestions li:hover {
+  background: #302a24;
+}
+
+[data-theme="dark"] .promise-item {
+  border-color: #3a3028;
+}
+
+[data-theme="dark"] .back-link {
+  color: #e07a58;
+}
+
+[data-theme="dark"] .site-footer {
+  background: #1f1c18;
+  border-color: #362f29;
+}
+
+[data-theme="dark"] .section-message {
+  color: #e07a58;
+}
+
+[data-theme="dark"] .form-message {
+  color: #e07a58;
+}
+
+[data-theme="dark"] .contact-badge {
+  background: #3a3028;
+  color: #9e8878;
+}
+
+[data-theme="dark"] .contact-badge--business,
+[data-theme="dark"] .contact-badge--colleague,
+[data-theme="dark"] .contact-badge--client,
+[data-theme="dark"] .contact-badge--partner,
+[data-theme="dark"] .contact-badge--mentor,
+[data-theme="dark"] .contact-badge--mentee {
+  background: #1e3a5a;
+  color: #7ab0e0;
+}
+
+[data-theme="dark"] .contact-badge--personal,
+[data-theme="dark"] .contact-badge--friend,
+[data-theme="dark"] .contact-badge--acquaintance,
+[data-theme="dark"] .contact-badge--family {
+  background: #1a3d28;
+  color: #6ab888;
+}
+
+[data-theme="dark"] .contact-card-footer {
+  border-color: #3a3028;
+  color: #9e8878;
+}
+
+[data-theme="dark"] .contact-last-seen {
+  color: #e07a58;
+}
+
+[data-theme="dark"] .theme-toggle {
+  border-color: #4a3e34;
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  background: #302a24;
+  border-color: #e07a58;
+}
+
+[data-theme="dark"] .promise-direction--mine {
+  background: #1a3d28;
+  color: #6ab888;
+}
+
+[data-theme="dark"] .promise-direction--theirs {
+  background: #3d2818;
+  color: #e07a58;
+}
+
+[data-theme="dark"] .section-divider,
+[data-theme="dark"] .divider {
+  background: #3a3028;
+}
+
+[data-theme="dark"] .card-title {
+  color: #e2d8d0;
+}
+
+/* плавный переход для всех цветных элементов */
+.site-header, .card, .button, .field input, .field select, .field textarea,
+.site-footer, .contact-card-footer, .interaction-item, .promise-item {
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ---------------------------------------------------------------
+   Авторазмер textarea
+--------------------------------------------------------------- */
+.form-card .field textarea {
+  overflow-y: hidden;
+  resize: none;
+}
+
+/* ---------------------------------------------------------------
+   Иконка-подсказка (тултип)
+--------------------------------------------------------------- */
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #d4c4b4;
+  color: #5c4a3a;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-style: normal;
+  cursor: help;
+  position: relative;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.info-icon::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2b2a27;
+  color: #f0ece8;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.45;
+  white-space: normal;
+  width: 240px;
+  max-width: 80vw;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  text-align: left;
+}
+
+.info-icon:hover::after,
+.info-icon:focus::after {
+  opacity: 1;
+}
+
+[data-theme="dark"] .info-icon {
+  background: #3a3028;
+  color: #c8b8a8;
+}
+
+[data-theme="dark"] .info-icon::after {
+  background: #1a1714;
+  color: #e2d8d0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }

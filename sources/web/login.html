@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
     <title>Вход — Rockfile</title>
     <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/assets/css/styles.css" />
@@ -18,6 +19,7 @@
         <nav class="nav">
           <a class="nav-link" href="index.html">Главная</a>
           <a class="nav-link is-active" href="login.html">Вход</a>
+          <button id="theme-toggle" class="theme-toggle" aria-label="Тёмная тема"><span class="theme-icon">🌙</span></button>
         </nav>
       </div>
     </header>

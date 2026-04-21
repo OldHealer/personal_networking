@@ -9,7 +9,6 @@
   - FastAPI роут `/api/v1/agents/prepare-meeting` создает state, запускает граф и возвращает `PrepareMeetingResponse`.
 """
 
-import os
 from dataclasses import dataclass
 from typing import Any, Literal, NotRequired, TypedDict
 
@@ -20,9 +19,13 @@ from langgraph.graph import StateGraph, START, END
 
 from agents.mcp_app import mcp
 from agents.tools.contacts_tools import contacts_get
+from settings import config as app_config
 from utils.logger_loguru import get_logger
 
 logger = get_logger()
+
+# кешированный LLM instance — не пересоздаём на каждый запрос
+_llm_instance: ChatOllama | None = None
 
 # ---------------------------------------------------------------------------
 # 1) Тип состояния (state)
@@ -47,7 +50,6 @@ class PrepareMeetingAdvice(TypedDict):
     """ Советы (LLM‑результат). """
     talking_points: str
     followups: str
-    draft_message: NotRequired[str]
 
 
 class PrepareMeetingState(TypedDict):
@@ -103,7 +105,7 @@ class PrepareMeetingAgentConfig:
     # access_token нужен только в MCP‑режиме (MCP tool layer валидирует токен)
     access_token: str | None = None
 
-    # session/tenant_id нужны только в local‑режиме (tools используют сервисный слой напрямую)
+    # session нужна только в local‑режиме; tenant_id нужен для изоляции list_links/interactions
     session: Any | None = None
     tenant_id: Any | None = None
 
@@ -112,25 +114,22 @@ class PrepareMeetingAgentConfig:
 
 def build_default_ollama_llm() -> ChatOllama:
     """
-    Фабрика LLM.
+    Фабрика LLM с кешированием instance.
 
     Вынесено отдельно, чтобы:
       - не размазывать параметры по коду,
       - можно было легко подменять LLM в тестах/экспериментах.
     """
-
-    # Важно для Docker/Compose:
-    # - внутри контейнера `localhost` указывает на контейнер, а не на хост-машину
-    # - если Ollama запущена на хосте, то в Docker обычно нужен `http://host.docker.internal:11434`
-    # Поэтому base_url делаем настраиваемым через env.
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip()
-
-    return ChatOllama(
-        model="qwen2.5:14b",
-        temperature=0.7,
-        num_predict=2048,
-        base_url=base_url,
-    )
+    global _llm_instance
+    if _llm_instance is None:
+        agent_cfg = app_config.agent
+        _llm_instance = ChatOllama(
+            model=agent_cfg.ollama_model,
+            temperature=agent_cfg.ollama_temperature,
+            num_predict=agent_cfg.ollama_num_predict,
+            base_url=agent_cfg.ollama_base_url,
+        )
+    return _llm_instance
 
 
 # ---------------------------------------------------------------------------
@@ -166,9 +165,9 @@ async def node_get_history(state: PrepareMeetingState, *, config: PrepareMeeting
         # LOCAL‑режим: обращаемся к сервисному слою напрямую через tool `contacts_get`.
         # Плюсы: быстро, просто, без транспорта MCP.
         # Минусы: tools не стандартизированы протоколом MCP.
-        if config.session is None or config.tenant_id is None:
+        if config.session is None:
             state["status"] = "error"
-            state["error_message"] = "LOCAL mode требует session и tenant_id."
+            state["error_message"] = "LOCAL mode требует session."
             return state
 
         history = await contacts_get(
@@ -198,47 +197,17 @@ async def node_get_history(state: PrepareMeetingState, *, config: PrepareMeeting
                     "interactions_limit": config.interactions_limit,
                 },
             )
-            history = result.data if hasattr(result, "data") else result  # совместимость
+
+        # FastMCP возвращает CallToolResult; .data содержит уже распарсенный dict
+        if result.is_error:
+            state["status"] = "error"
+            state["error_message"] = f"MCP tool вернул ошибку: {result.data}"
+            logger.error(state["error_message"])
+            return state
+        history = result.data
 
     state["history"] = history  # type: ignore[assignment]
-    logger.info(f"Результат узла (get_history) {state}")
-    state_history = {'user_query': 'Поляков Антон Сергеевич',
-                     'contact_id': '2500a066-a93c-4e82-b556-e3f37bd99fe9',
-                     'history': {
-                         'contact': {'id': '2500a066-a93c-4e82-b556-e3f37bd99fe9',
-                                     'tenant_id': 'b32ec583-6791-408e-b709-a8deda5fe227',
-                                     'full_name': 'Поляков Антон Сергеевич', 'address': None, 'phone': None,
-                                     'email': None,
-                                     'relationship_type': 'personal',
-                                     'hobbies': ['Футбол - еженедельно на роторе катает в миньку'], 'interests': [],
-                                     'family_status': 'Не женат', 'birthday': '1985-07-08',
-                                     'ambitions': None,
-                                     'created_at': '2026-03-13T19:22:34.555527Z',
-                                     'updated_at': '2026-03-17T13:46:43.868415Z'},
-                         'links': [{'id': '156e7ac2-1d30-4ba7-a61f-f288f52c2953',
-                                    'tenant_id': 'b32ec583-6791-408e-b709-a8deda5fe227',
-                                    'contact_id_a': '2500a066-a93c-4e82-b556-e3f37bd99fe9',
-                                    'contact_id_b': '1255543c-7e55-4b75-a5b3-f25affce6229',
-                                    'relationship_type': 'friend',
-                                    'context': 'Познакомились в университете', 'is_directed': 0,
-                                    'created_at': '2026-03-13T20:04:27.797271Z',
-                                    'updated_at': '2026-03-13T20:04:27.797271Z'},
-                                   {'id': 'fb007ffb-719a-4cc3-8506-ffafccee3812',
-                                    'tenant_id': 'b32ec583-6791-408e-b709-a8deda5fe227',
-                                    'contact_id_a': '383908a0-2320-4779-b111-3b1d4aa94b78',
-                                    'contact_id_b': '2500a066-a93c-4e82-b556-e3f37bd99fe9',
-                                    'relationship_type': 'other',
-                                    'context': 'Родные братья', 'is_directed': 0,
-                                    'created_at': '2026-03-13T20:13:10.754224Z',
-                                    'updated_at': '2026-03-13T20:13:10.754224Z'}],
-                         'interactions': [
-                             {'id': '45ab22d6-d63a-494e-b329-587ae4cebd1e',
-                              'contact_id': '2500a066-a93c-4e82-b556-e3f37bd99fe9',
-                              'occurred_at': '2025-11-14T20:00:00Z', 'channel': 'Встреча в "Праге"',
-                              'notes': 'Был Софронов А.В.',
-                              'promises': [], 'mentions': [], 'created_at': '2026-03-13T20:01:37.019183Z',
-                              'updated_at': '2026-03-13T20:01:37.019183Z'}
-                         ]}}
+    logger.info(f"get_history завершён: contact_id={contact_id}")
     return state
 
 
@@ -253,16 +222,11 @@ async def node_summarize_history(state: PrepareMeetingState, *, config: PrepareM
     - LLM получает "сырой" контекст, но мы чётко задаём формат ответа.
     - Для обучения проще вернуть 4 текстовых поля.
     """
-    logger.info(f'state: {state}')
-    logger.info(f'state: {type(state)}')
-
     history = state.get("history")
-    logger.info(f'history: {history}')
-
     if not history:
         state["status"] = "error"
         state["error_message"] = "Нет history для summarize_history."
-        logger.info("Нет history для summarize_history.")
+        logger.error(state["error_message"])
         return state
 
     contact = history.get("contact", {})
@@ -291,43 +255,36 @@ async def node_summarize_history(state: PrepareMeetingState, *, config: PrepareM
         )
     )
 
-    logger.info(f'human: {human}')
     try:
         resp = await config.llm.ainvoke([system, human])
         text = getattr(resp, "content", "") or ""
-        logger.info(f'Результат работы LLM -> {resp}')
+        logger.info(f"summarize_history: LLM ответил ({len(text)} символов)")
     except Exception as e:
         # Частая причина: Ollama недоступна по base_url (например, внутри Docker localhost не тот).
         # Вместо падения всего запроса возвращаем понятную ошибку в state.
         state["status"] = "error"
         state["error_message"] = (
             "Не удалось подключиться к Ollama (LLM). "
-            "Проверьте, что Ollama запущена и OLLAMA_BASE_URL задан корректно. "
+            "Проверьте, что Ollama запущена и AGENT__OLLAMA_BASE_URL задан корректно. "
             f"Ошибка: {e!s}"
         )
-        logger.info(state["error_message"])
+        logger.error(state["error_message"])
         return state
 
-    # Парсер "в лоб" (для обучения): режем по маркерам.
+    # Парсер "в лоб": режем по маркерам.
     def _extract(block: str) -> str:
         return block.strip() if block else ""
 
-    profile = ""
-    last_interactions = ""
-    promises = ""
-    risks = ""
+    def _split(marker: str, s: str) -> tuple[str, str]:
+        if marker in s:
+            a, b = s.split(marker, 1)
+            return a, b
+        return s, ""
 
-    # максимально простой парсинг по заголовкам
+    profile = last_interactions = promises = risks = ""
     parts = text.split("PROFILE:")
     if len(parts) > 1:
         rest = parts[1]
-        # делим по следующим маркерам
-        def _split(marker: str, s: str) -> tuple[str, str]:
-            if marker in s:
-                a, b = s.split(marker, 1)
-                return a, b
-            return s, ""
-
         p1, rest2 = _split("LAST_INTERACTIONS:", rest)
         p2, rest3 = _split("PROMISES:", rest2)
         p3, rest4 = _split("RISKS:", rest3)
@@ -335,6 +292,10 @@ async def node_summarize_history(state: PrepareMeetingState, *, config: PrepareM
         last_interactions = _extract(p2)
         promises = _extract(p3)
         risks = _extract(rest4)
+
+    # если LLM не дал структурированный ответ — кладём весь текст в profile
+    if not any([profile, last_interactions, promises, risks]):
+        profile = text.strip()
 
     state["summary"] = {
         "profile": profile or "—",
@@ -350,16 +311,15 @@ async def node_generate_advice(state: PrepareMeetingState, *, config: PrepareMee
     Узел: generate_advice (LLM)
 
     На входе — state.summary + часть state.history,
-    на выходе — практические советы + follow-ups + черновик сообщения.
+    на выходе — практические советы + follow-ups.
     """
-    logger.info(f'Стартую узел генерации совета')
     summary = state.get("summary")
     history = state.get("history")
 
     if not summary or not history:
         state["status"] = "error"
         state["error_message"] = "Нет summary/history для generate_advice."
-        logger.info(state["error_message"])
+        logger.error(state["error_message"])
         return state
 
     user_query = state.get("user_query", "")
@@ -370,8 +330,7 @@ async def node_generate_advice(state: PrepareMeetingState, *, config: PrepareMee
             "Дай практичные советы.\n"
             "Формат ответа строго:\n"
             "TALKING_POINTS:\n<список>\n\n"
-            "FOLLOWUPS:\n<список>\n\n"
-            "DRAFT_MESSAGE:\n<черновик>\n"
+            "FOLLOWUPS:\n<список>\n"
         )
     )
     human = HumanMessage(
@@ -389,35 +348,30 @@ async def node_generate_advice(state: PrepareMeetingState, *, config: PrepareMee
         state["status"] = "error"
         state["error_message"] = (
             "Не удалось подключиться к Ollama (LLM) на шаге генерации советов. "
-            "Проверьте Ollama и OLLAMA_BASE_URL. "
+            "Проверьте Ollama и AGENT__OLLAMA_BASE_URL. "
             f"Ошибка: {e!s}"
         )
+        logger.error(state["error_message"])
         return state
 
-    # Такой же простой парсер по маркерам
-    talking_points = ""
-    followups = ""
-    draft = ""
-
+    talking_points = followups = ""
     parts = text.split("TALKING_POINTS:")
     if len(parts) > 1:
         rest = parts[1]
         if "FOLLOWUPS:" in rest:
             a, rest2 = rest.split("FOLLOWUPS:", 1)
             talking_points = a.strip()
-            if "DRAFT_MESSAGE:" in rest2:
-                b, c = rest2.split("DRAFT_MESSAGE:", 1)
-                followups = b.strip()
-                draft = c.strip()
-            else:
-                followups = rest2.strip()
+            followups = rest2.strip()
         else:
             talking_points = rest.strip()
+
+    # если LLM не дал структурированный ответ — кладём весь текст в talking_points
+    if not talking_points:
+        talking_points = text.strip()
 
     state["advice"] = {
         "talking_points": talking_points or "—",
         "followups": followups or "—",
-        "draft_message": draft or "",
     }
     return state
 
@@ -427,7 +381,12 @@ async def node_format_output(state: PrepareMeetingState) -> PrepareMeetingState:
     Узел: format_output (детерминированный)
 
     Собираем итоговый markdown‑подобный текст, который удобно показать в UI.
+    Обрабатывает в том числе состояние ошибки — тогда выводит сообщение об ошибке.
     """
+
+    if state.get("status") == "error":
+        state["output"] = f"# Ошибка\n\n{state.get('error_message', 'Неизвестная ошибка')}"
+        return state
 
     history = state.get("history") or {}
     summary = state.get("summary") or {}
@@ -436,7 +395,7 @@ async def node_format_output(state: PrepareMeetingState) -> PrepareMeetingState:
     contact = history.get("contact") or {}
     name = contact.get("full_name") or "Контакт"
 
-    output = (
+    state["output"] = (
         f"# Подготовка к встрече с {name}\n\n"
         "## Кратко\n"
         f"{summary.get('profile', '—')}\n\n"
@@ -451,12 +410,6 @@ async def node_format_output(state: PrepareMeetingState) -> PrepareMeetingState:
         "## Follow‑up после встречи\n"
         f"{advice.get('followups', '—')}\n\n"
     )
-
-    draft = advice.get("draft_message") or ""
-    if draft.strip():
-        output += "## Черновик сообщения\n" + draft.strip() + "\n"
-
-    state["output"] = output
     state["status"] = state.get("status") or "ok"
     return state
 
@@ -473,10 +426,8 @@ def build_prepare_meeting_graph(cfg: PrepareMeetingAgentConfig) -> Any:
     Важно: граф описывает *контроль потока* (что за чем идёт).
     Реальные параметры (LLM, access_token, лимиты, режим) мы "замыкаем" в узлах через cfg.
 
-    Почему так:
-    - LangGraph по умолчанию вызывает узлы как `node(state)`.
-    - Нам важно держать учебный код простым и явно контролировать зависимости узлов.
-    - Поэтому вместо передачи cfg через runnable-config мы используем closure.
+    При status=error на любом узле граф сразу переходит в format_output,
+    минуя оставшиеся LLM‑узлы.
     """
 
     g: StateGraph[PrepareMeetingState] = StateGraph(PrepareMeetingState)
@@ -493,19 +444,22 @@ def build_prepare_meeting_graph(cfg: PrepareMeetingAgentConfig) -> Any:
     async def _generate_advice(state: PrepareMeetingState) -> PrepareMeetingState:
         return await node_generate_advice(state, config=cfg)
 
-    async def _format_output(state: PrepareMeetingState) -> PrepareMeetingState:
-        return await node_format_output(state)
-
     # Узлы
     g.add_node("get_history", _get_history)
     g.add_node("summarize_history", _summarize_history)
     g.add_node("generate_advice", _generate_advice)
-    g.add_node("format_output", _format_output)
+    g.add_node("format_output", node_format_output)
 
-    # Рёбра (последовательный pipeline)
+    # Рёбра: при ошибке сразу переходим в format_output, иначе — следующий узел
     g.add_edge(START, "get_history")
-    g.add_edge("get_history", "summarize_history")
-    g.add_edge("summarize_history", "generate_advice")
+    g.add_conditional_edges(
+        "get_history",
+        lambda s: "format_output" if s.get("status") == "error" else "summarize_history",
+    )
+    g.add_conditional_edges(
+        "summarize_history",
+        lambda s: "format_output" if s.get("status") == "error" else "generate_advice",
+    )
     g.add_edge("generate_advice", "format_output")
     g.add_edge("format_output", END)
 
@@ -540,30 +494,14 @@ async def run_prepare_meeting_agent(
       - `summary/advice` — структурированные блоки для UI
     """
 
-    # Режим выбирается через ENV: TODO сделать через settings.config
-    #   ROCKFILE_AGENT_MODE=mcp|local
-    # По умолчанию используем mcp, считается что это каноничный вариант
-    mode = os.getenv("ROCKFILE_AGENT_MODE", "mcp").strip().lower()
-    if mode not in ("mcp", "local"):
-        mode = "mcp"
-
     cfg = PrepareMeetingAgentConfig(
         llm=llm or build_default_ollama_llm(),
-        mode=mode,  # type: ignore[arg-type]
+        mode=app_config.agent.mode,
         access_token=access_token,
         session=session,
         tenant_id=tenant_id,
     )
 
-    # Собираем граф под конкретный cfg (closures)
     graph = build_prepare_meeting_graph(cfg)
-
-    # initial state
     state: PrepareMeetingState = {"user_query": query or "", "contact_id": contact_id}
-
-    # LangGraph позволяет передавать "extra" аргументы в узлы через kwargs.
-    # Здесь мы явно пробрасываем session/tenant_id/config.
-    # Узлы уже "замкнули" cfg, поэтому ainvoke вызываем без доп. конфигов
-    result: PrepareMeetingState = await graph.ainvoke(state)
-    return result
-
+    return await graph.ainvoke(state)

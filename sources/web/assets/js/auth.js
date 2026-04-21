@@ -1,6 +1,8 @@
-import { setFooterYear, setMessage } from "./ui.js";
+import { setFooterYear, setMessage, initTheme, setupThemeToggle } from "./ui.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
+  setupThemeToggle();
   setFooterYear();
 
   const form = document.getElementById("login-form");
