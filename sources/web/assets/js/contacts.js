@@ -1,4 +1,4 @@
-import { setFooterYear, setMessage } from "./ui.js";
+import { setFooterYear, setMessage, initTheme, setupThemeToggle } from "./ui.js";
 
 const escapeHtml = (s) => {
   if (s == null) return "";
@@ -6,6 +6,25 @@ const escapeHtml = (s) => {
   div.textContent = s;
   return div.innerHTML;
 };
+
+const RELATIONSHIP_LABELS = {
+  business: "Деловой", colleague: "Коллега", client: "Клиент",
+  partner: "Партнёр", mentor: "Наставник", mentee: "Подопечный",
+  personal: "Личный", friend: "Друг", acquaintance: "Знакомый",
+  family: "Семья", other: "Другое",
+};
+
+function formatRelativeTime(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  const days = Math.floor((Date.now() - d) / 86400000);
+  if (days === 0) return "сегодня";
+  if (days === 1) return "вчера";
+  if (days < 7) return `${days} дн. назад`;
+  if (days < 30) return `${Math.floor(days / 7)} нед. назад`;
+  if (days < 365) return `${Math.floor(days / 30)} мес. назад`;
+  return `${Math.floor(days / 365)} г. назад`;
+}
 
 const state = {
   sort: "name",
@@ -62,15 +81,22 @@ const renderContacts = (items) => {
     const card = document.createElement("a");
     card.className = "card contact-card contact-card-link";
     card.href = `/contact.html?id=${item.id}`;
-    const lastInteraction = item.last_interaction_at
-      ? new Date(item.last_interaction_at).toLocaleDateString("ru", { day: "numeric", month: "short", year: "numeric" })
-      : null;
+    const relType = item.relationship_type || "";
+    const relLabel = RELATIONSHIP_LABELS[relType] || null;
+    const lastSeen = item.last_interaction_at ? formatRelativeTime(item.last_interaction_at) : null;
     card.innerHTML = `
-      <h3>${escapeHtml(item.full_name || "Без имени")}</h3>
+      <div class="contact-card-header">
+        <h3>${escapeHtml(item.full_name || "Без имени")}</h3>
+        ${relLabel ? `<span class="contact-badge contact-badge--${escapeHtml(relType)}">${escapeHtml(relLabel)}</span>` : ""}
+      </div>
       <div class="contact-meta">
         ${item.phone ? `<span>${escapeHtml(item.phone)}</span>` : ""}
         ${item.email ? `<span>${escapeHtml(item.email)}</span>` : ""}
-        ${lastInteraction ? `<span class="contact-tag">Взаимодействие: ${escapeHtml(lastInteraction)}</span>` : `<span class="muted">Взаимодействий пока нет</span>`}
+      </div>
+      <div class="contact-card-footer">
+        ${lastSeen
+          ? `<span class="contact-last-seen">↔ ${escapeHtml(lastSeen)}</span>`
+          : `<span class="muted">Встреч не было</span>`}
       </div>
     `;
     grid.appendChild(card);
@@ -418,6 +444,8 @@ const handleCreate = async (event) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
+  setupThemeToggle();
   setFooterYear();
   applyTokenFromHash();
 

@@ -132,8 +132,14 @@ class Audit(BaseModel):
     retention_period: str = Field(default="30 days", description="Период хранения логов")
 
 
-# class LLMSettings(BaseModel):
-#     """ Настройки LLM """
+class AgentSettings(BaseModel):
+    """Настройки агентов"""
+    mode: Literal["mcp", "local"] = Field(default="mcp", description="Режим работы агента: mcp или local")
+    ollama_base_url: str = Field(default="http://localhost:11434", description="URL Ollama API")
+    ollama_model: str = Field(default="qwen2.5:14b", description="Модель Ollama")
+    ollama_temperature: float = Field(default=0.7, description="Температура LLM")
+    ollama_num_predict: int = Field(default=2048, description="Максимальное число генерируемых токенов")
+    interactions_limit: int = Field(default=10, description="Лимит взаимодействий для агента")
 
 
 class Settings(BaseSettings):
@@ -174,6 +180,7 @@ class Settings(BaseSettings):
     audit: Audit = Field(default_factory=Audit, description="Настройки аудит логгера")
     keycloak: KeycloakSettings = Field(default_factory=KeycloakSettings, description="Настройки Keycloak")
     keycloak_admin: KeycloakAdminSettings = Field(default_factory=KeycloakAdminSettings, description="Admin доступ к Keycloak")
+    agent: AgentSettings = Field(default_factory=AgentSettings, description="Настройки агентов")
 
 
 

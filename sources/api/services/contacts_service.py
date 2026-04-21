@@ -9,7 +9,6 @@ from api.data_base.models import ContactCard, ContactInteraction, Tenant
 from api.schemas.contacts import ContactCardCreate, ContactCardUpdate
 from utils.logger_loguru import get_logger
 
-
 logger = get_logger()
 
 
@@ -20,13 +19,13 @@ def _apply_tenant_filter(stmt, tenant_id):
 
 
 class ContactService:
-    """Централизованная логика работы с контактами."""
+    """ Централизованная логика работы с контактами. """
 
     def __init__(self, dao: BaseDAO):
         self.dao = dao
 
-    async def list_contacts( self, session: AsyncSession, tenant_id, page: int, per_page: int, sort: str, ):
-        """Список контактов с пагинацией и сортировкой (логика поверх модели; DAO не поддерживает пагинацию)."""
+    async def list_contacts( self, session: AsyncSession, tenant_id, page: int, per_page: int, sort: str):
+        """ Получение списка контактов с пагинацией и сортировкой (логика поверх модели). """
         last_interaction_subq = (
             select(
                 ContactInteraction.contact_id.label("contact_id"),
@@ -36,10 +35,7 @@ class ContactService:
             .subquery()
         )
 
-        sort_map = {
-            "name": ContactCard.full_name,
-            "created_at": ContactCard.created_at,
-        }
+        sort_map = {"name": ContactCard.full_name, "created_at": ContactCard.created_at,}
         sort_column = sort_map.get(sort, ContactCard.full_name)
 
         base_stmt = _apply_tenant_filter(
@@ -68,27 +64,19 @@ class ContactService:
         return items, total
 
 
-    async def get_contact(self, session: AsyncSession, tenant_id, contact_id: str):
-        """Получить контакт по ID.
-
-        Временно убираем строгую проверку tenant_id, чтобы контакты с «старыми»
-        или некорректными tenant_id всё равно открывались в UI.
-        """
+    async def get_contact(self, session: AsyncSession, contact_id: str):
+        """ Получить контакт по ID. """
         contact = await self.dao.get_by_id(contact_id, session=session)
         if contact is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
         return contact
 
-    async def create_contact(
-        self,
-        session: AsyncSession,
-        tenant_id,
-        payload: ContactCardCreate,
-    ):
-        """Создать карточку контакта c безопасной подстановкой tenant_id.
+
+    async def create_contact(self, session: AsyncSession, tenant_id, payload: ContactCardCreate):
+        """ Создать карточку контакта c безопасной подстановкой tenant_id.
 
         Если tenant_id у пользователя указывает на несуществующего арендатора,
-        создаём такого арендатора автоматически, чтобы не получать FK-ошибку.
+        создаём такого арендатора автоматически.
         """
         data = payload.model_dump()
 
@@ -103,45 +91,24 @@ class ContactService:
                 await session.flush()
         data["tenant_id"] = resolved_tenant_id
         contact = await self.dao.create(data, session=session)
-
+        logger.info(f"Created contact {contact.full_name}")
         return contact
 
 
-    async def update_contact(
-        self,
-        session: AsyncSession,
-        tenant_id,
-        contact_id: str,
-        payload: ContactCardUpdate,
-    ):
-        """Частичное обновление контакта с проверкой tenant."""
-        logger.info(
-            "update_contact called tenant_id=%s, contact_id=%s, payload=%s",
-            tenant_id,
-            contact_id,
-            payload.model_dump(exclude_unset=True),
-        )
-        await self.get_contact(
-            session=session, tenant_id=tenant_id, contact_id=contact_id
-        )
+    async def update_contact(self, session: AsyncSession, contact_id: str, payload: ContactCardUpdate):
+        """ Частичное обновление контакта с проверкой tenant. """
+        await self.get_contact(session=session, contact_id=contact_id)
         data = payload.model_dump(exclude_unset=True)
         contact = await self.dao.update(contact_id, data, session=session)
-        logger.info(
-            "update_contact success tenant_id=%s, contact_id=%s",
-            tenant_id,
-            contact_id,
-        )
+        logger.info(f"Updated contact {contact.full_name}, updated {data}")
         return contact
 
-    async def delete_contact(
-        self,
-        session: AsyncSession,
-        tenant_id,
-        contact_id: str,
-    ):
+
+    async def delete_contact(self, session: AsyncSession, contact_id: str):
         """Удалить контакт с проверкой tenant."""
-        await self.get_contact(session=session, tenant_id=tenant_id, contact_id=contact_id)
+        contact = await self.get_contact(session=session, contact_id=contact_id)
         await self.dao.delete(contact_id, session=session)
+        logger.info(f"Deleted contact {contact.full_name}|{contact_id}")
         return None
 
 
@@ -151,37 +118,20 @@ contact_service = ContactService(contacts_dao)
 
 # Публичный API для роутера (обратная совместимость)
 async def list_contacts(session, tenant_id, page, per_page, sort):
-    return await contact_service.list_contacts(
-        session=session,
-        tenant_id=tenant_id,
-        page=page,
-        per_page=per_page,
-        sort=sort,
-    )
+    return await contact_service.list_contacts(session=session, tenant_id=tenant_id, page=page, per_page=per_page, sort=sort)
 
 
 async def create_contact(session, tenant_id, payload: ContactCardCreate):
-    return await contact_service.create_contact(
-        session=session, tenant_id=tenant_id, payload=payload
-    )
+    return await contact_service.create_contact(session=session, tenant_id=tenant_id, payload=payload)
 
 
-async def get_contact(session, tenant_id, contact_id: str):
-    return await contact_service.get_contact(
-        session=session, tenant_id=tenant_id, contact_id=contact_id
-    )
+async def get_contact(session, contact_id: str):
+    return await contact_service.get_contact(session=session, contact_id=contact_id)
 
 
-async def update_contact(session, tenant_id, contact_id: str, payload: ContactCardUpdate):
-    return await contact_service.update_contact(
-        session=session,
-        tenant_id=tenant_id,
-        contact_id=contact_id,
-        payload=payload,
-    )
+async def update_contact(session, contact_id: str, payload: ContactCardUpdate):
+    return await contact_service.update_contact(session=session, contact_id=contact_id, payload=payload)
 
 
-async def delete_contact(session, tenant_id, contact_id: str):
-    return await contact_service.delete_contact(
-        session=session, tenant_id=tenant_id, contact_id=contact_id
-    )
+async def delete_contact(session, contact_id: str):
+    return await contact_service.delete_contact(session=session, contact_id=contact_id)

@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Контакт — Rockfile</title>
+    <script>try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
     <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/assets/css/styles.css" />
     <script src="/assets/js/strip-token-from-url.js"></script>
@@ -19,6 +20,7 @@
           <a class="nav-link" href="/index.html">Главная</a>
           <a class="nav-link" href="/contacts.html">Контакты</a>
           <a class="nav-link" href="/login.html">Вход</a>
+          <button id="theme-toggle" class="theme-toggle" aria-label="Тёмная тема"><span class="theme-icon">🌙</span></button>
         </nav>
       </div>
     </header>
@@ -31,7 +33,7 @@
             <h1 id="contact-title">Контакт</h1>
           </div>
           <div class="page-actions">
-            <button id="btn-delete" class="button" type="button">Удалить контакт</button>
+            <button id="btn-delete" class="button button-danger" type="button">Удалить контакт</button>
           </div>
         </div>
         <p id="auth-error" class="form-message" role="alert" style="display: none;"></p>
@@ -39,161 +41,211 @@
 
         <div id="contact-loading" class="muted">Загрузка...</div>
         <div id="contact-content" style="display: none;">
-          <form id="contact-form" class="form contact-form-sections">
-            <section class="card form-card" data-contact-section="main">
-              <h2>Основное</h2>
-              <label class="field">
-                <span>Полное имя</span>
-                <input type="text" name="full_name" required />
-              </label>
-              <label class="field">
-                <span>Телефон</span>
-                <input type="text" name="phone" placeholder="+7 900 000-00-00" />
-              </label>
-              <label class="field">
-                <span>Email</span>
-                <input type="email" name="email" placeholder="ivan@example.com" />
-              </label>
-              <label class="field">
-                <span>Адрес</span>
-                <input type="text" name="address" />
-              </label>
-              <label class="field">
-                <span>Тип отношений</span>
-                <select name="relationship_type">
-                  <option value="">— не указан —</option>
-                  <option value="business">Деловой</option>
-                  <option value="personal">Личный</option>
-                  <option value="other">Другое</option>
-                </select>
-              </label>
-              <div class="form-card-actions">
-                <p class="form-message section-message" data-section-message="main"></p>
-                <button type="button" class="button" data-save-section="main">Сохранить</button>
-              </div>
-            </section>
+          <div class="contact-layout">
 
-            <section class="card form-card" data-contact-section="personal">
-              <h2>Личное</h2>
-              <label class="field">
-                <span>Семейное положение</span>
-                <input type="text" name="family_status" />
-              </label>
-              <label class="field">
-                <span>День рождения</span>
-                <input type="date" name="birthday" />
-              </label>
-              <label class="field">
-                <span>Заметки (каждое с новой строки)</span>
-                <textarea name="hobbies" rows="2" placeholder="Важно помнить о человеке&#10;Например: что ему интересно"></textarea>
-              </label>
-              <label class="field">
-                <span>Интересы (каждое с новой строки)</span>
-                <textarea name="interests" rows="2"></textarea>
-              </label>
-              <div class="form-card-actions">
-                <p class="form-message section-message" data-section-message="personal"></p>
-                <button type="button" class="button" data-save-section="personal">Сохранить</button>
-              </div>
-            </section>
-
-          </form>
-
-          <section class="card form-card">
-            <h2>Взаимодействия</h2>
-            <div id="interactions-list" class="interactions-list muted">
-              <p id="interactions-empty">Пока нет зафиксированных взаимодействий.</p>
-              <ul id="interactions-items"></ul>
-            </div>
-            <h3 id="interaction-form-title">Добавить взаимодействие</h3>
-            <form id="interaction-form" class="form form-inline-compact">
-              <label class="field">
-                <span>Когда</span>
-                <input type="datetime-local" name="occurred_at" required />
-              </label>
-              <label class="field">
-                <span>Канал</span>
-                <input type="text" name="channel" placeholder="встреча, звонок, чат..." />
-              </label>
-              <label class="field">
-                <span>Заметка</span>
-                <input type="text" name="notes" placeholder="О чём говорили / к чему договорились" />
-              </label>
-              <label class="field">
-                <span>Обещания (каждое с новой строки)</span>
-                <textarea name="promises" rows="2" placeholder="Позвонить через неделю&#10;Прислать презентацию"></textarea>
-              </label>
-              <p id="interaction-message" class="form-message"></p>
-              <div class="form-actions-inline">
-                <button id="interaction-cancel-edit" type="button" class="button button-outline" hidden>Отменить</button>
-                <button id="interaction-submit-button" type="submit" class="button">Сохранить взаимодействие</button>
-              </div>
-            </form>
-          </section>
-
-          <section class="card form-card">
-            <h2>Связи</h2>
-            <div id="links-list" class="links-list muted">
-              <p id="links-empty">Связей пока нет.</p>
-              <ul id="links-items"></ul>
-            </div>
-            <form id="link-form" class="form form-inline-compact link-form">
-              <label class="field link-form-field">
-                <span>Контакт</span>
-                <div class="contact-autocomplete">
-                  <input type="text" id="link-contact-search" placeholder="Поиск по имени или фамилии…" autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-controls="link-contact-suggestions" />
-                  <input type="hidden" name="contact_id_b" id="link-contact-id" required />
-                  <ul id="link-contact-suggestions" class="contact-suggestions" role="listbox" aria-hidden="true"></ul>
+            <!-- Строка 1: Основное + Личное -->
+            <form id="contact-form" class="contact-row">
+              <section class="card form-card" data-contact-section="main">
+                <h2 class="card-title">Основное</h2>
+                <label class="field">
+                  <span>Полное имя</span>
+                  <input type="text" name="full_name" placeholder="Иван Иванович Иванов" required />
+                </label>
+                <label class="field">
+                  <span>Телефон</span>
+                  <input type="text" name="phone" placeholder="+7 900 000-00-00" />
+                </label>
+                <label class="field">
+                  <span>Email</span>
+                  <input type="email" name="email" placeholder="ivan@example.com" />
+                </label>
+                <label class="field">
+                  <span>Адрес</span>
+                  <input type="text" name="address" placeholder="Город, район" />
+                </label>
+                <label class="field">
+                  <span>Тип отношений</span>
+                  <select name="relationship_type">
+                    <option value="">— не указан —</option>
+                    <optgroup label="Профессиональные">
+                      <option value="business">Деловой</option>
+                      <option value="colleague">Коллега</option>
+                      <option value="client">Клиент</option>
+                      <option value="partner">Партнёр</option>
+                      <option value="mentor">Наставник / ментор</option>
+                      <option value="mentee">Подопечный</option>
+                    </optgroup>
+                    <optgroup label="Личные">
+                      <option value="personal">Личный</option>
+                      <option value="friend">Друг</option>
+                      <option value="acquaintance">Знакомый</option>
+                      <option value="family">Семья</option>
+                    </optgroup>
+                    <option value="other">Другое</option>
+                  </select>
+                </label>
+                <div class="form-card-actions">
+                  <p class="form-message section-message" data-section-message="main"></p>
+                  <button type="button" class="button" data-save-section="main">Сохранить</button>
                 </div>
-              </label>
-              <label class="field link-form-field link-form-relationship">
-                <span>Тип связи</span>
-                <select name="relationship_type" required>
-                  <option value="friend">Друг</option>
-                  <option value="colleague">Коллега</option>
-                  <option value="spouse">Партнёр/супруг</option>
-                  <option value="parent">Родитель</option>
-                  <option value="child">Ребёнок</option>
-                  <option value="other">Другое</option>
-                </select>
-              </label>
-              <label class="field link-form-field">
-                <span>Контекст</span>
-                <input type="text" name="context" placeholder="Через кого познакомились, в каком проекте" />
-              </label>
-              <label class="field field-inline link-form-field link-form-directed">
-                <span>Направленная связь</span>
-                <input type="checkbox" name="is_directed" class="checkbox-link-directed" />
-              </label>
-              <p id="link-message" class="form-message"></p>
-              <button type="submit" class="button">Сохранить связь</button>
-            </form>
-          </section>
+              </section>
 
-          <form id="contact-plans-form" class="form contact-form-sections">
-            <section class="card form-card" data-contact-section="plans">
-              <h2>Планы и обещания</h2>
-              <label class="field">
-                <span>Цели (каждое с новой строки)</span>
-                <textarea name="goals" rows="2"></textarea>
-              </label>
-              <label class="field">
-                <span>Амбиции и планы</span>
-                <textarea name="ambitions" rows="2"></textarea>
-              </label>
-              <div class="field">
-                <span>Активные обещания</span>
-                <div id="promises-list" class="promises-list muted">
-                  <p id="promises-empty">Пока нет активных обещаний.</p>
-                  <ul id="promises-items"></ul>
+              <section class="card form-card" data-contact-section="personal">
+                <h2 class="card-title">Личное</h2>
+                <label class="field">
+                  <span>Семейное положение</span>
+                  <input type="text" name="family_status" placeholder="Женат, двое детей" />
+                </label>
+                <label class="field">
+                  <span>День рождения</span>
+                  <input type="date" name="birthday" />
+                </label>
+                <label class="field">
+                  <span>Заметки</span>
+                  <textarea name="hobbies" rows="3" placeholder="Важно помнить о человеке&#10;Например: любит говорить о стартапах&#10;Не любит опоздания"></textarea>
+                </label>
+                <label class="field">
+                  <span>Интересы</span>
+                  <textarea name="interests" rows="3" placeholder="Шахматы, горный туризм&#10;Инвестиции, стартапы"></textarea>
+                </label>
+                <div class="form-card-actions">
+                  <p class="form-message section-message" data-section-message="personal"></p>
+                  <button type="button" class="button" data-save-section="personal">Сохранить</button>
                 </div>
+              </section>
+            </form>
+
+            <!-- Строка 2: Взаимодействия + Планы и обещания -->
+            <div class="contact-row">
+              <section class="card form-card">
+                <h2 class="card-title">Взаимодействия</h2>
+                <div id="interactions-list" class="interactions-list muted">
+                  <p id="interactions-empty">Пока нет зафиксированных взаимодействий.</p>
+                  <ul id="interactions-items"></ul>
+                </div>
+                <h3 id="interaction-form-title" class="form-subtitle">Добавить взаимодействие</h3>
+                <form id="interaction-form" class="form form-inline-compact">
+                  <label class="field">
+                    <span>Когда</span>
+                    <input type="datetime-local" name="occurred_at" required />
+                  </label>
+                  <label class="field">
+                    <span>Канал</span>
+                    <select name="channel">
+                      <option value="">— не указан —</option>
+                      <option value="встреча">🤝 Встреча лично</option>
+                      <option value="звонок">📞 Звонок</option>
+                      <option value="видеозвонок">📹 Видеозвонок</option>
+                      <option value="переписка">💬 Переписка / чат</option>
+                      <option value="email">✉️ Email</option>
+                      <option value="соцсети">🌐 Соцсети</option>
+                      <option value="конференция">🏢 Конференция / мероприятие</option>
+                      <option value="другое">Другое</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span>Заметка о встрече</span>
+                    <textarea name="notes" rows="2" placeholder="О чём говорили, что обсудили&#10;К чему пришли"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>Мои обещания</span>
+                    <textarea name="promises_mine" rows="3" placeholder="Каждое обещание — с новой строки"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>Его/её обещания</span>
+                    <textarea name="promises_theirs" rows="3" placeholder="Каждое обещание — с новой строки"></textarea>
+                  </label>
+                  <p id="interaction-message" class="form-message"></p>
+                  <div class="form-actions-inline">
+                    <button id="interaction-cancel-edit" type="button" class="button button-outline" hidden>Отменить</button>
+                    <button id="interaction-submit-button" type="submit" class="button">Сохранить взаимодействие</button>
+                  </div>
+                </form>
+              </section>
+
+              <form id="contact-plans-form" class="card form-card">
+                <div class="inner-form" data-contact-section="plans">
+                  <h2 class="card-title">Планы и обещания</h2>
+                  <label class="field">
+                    <span>Цели контакта</span>
+                    <textarea name="goals" rows="3" placeholder="Хочет открыть бизнес&#10;Ищет инвестора"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>Амбиции и контекст</span>
+                    <textarea name="ambitions" rows="3" placeholder="Долгосрочные планы&#10;Мотивация и ценности"></textarea>
+                  </label>
+                  <div class="field">
+                    <span>Активные обещания</span>
+                    <div id="promises-list" class="promises-list muted">
+                      <p id="promises-empty">Пока нет активных обещаний.</p>
+                      <ul id="promises-items"></ul>
+                    </div>
+                  </div>
+                  <div class="form-card-actions">
+                    <p class="form-message section-message" data-section-message="plans"></p>
+                    <button type="button" class="button" data-save-section="plans">Сохранить</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- Строка 3: Связи -->
+            <section class="card form-card">
+              <h2 class="card-title">Связи</h2>
+              <div id="links-list" class="links-list muted">
+                <p id="links-empty">Связей пока нет.</p>
+                <ul id="links-items"></ul>
               </div>
-              <div class="form-card-actions">
-                <p class="form-message section-message" data-section-message="plans"></p>
-                <button type="button" class="button" data-save-section="plans">Сохранить</button>
-              </div>
+              <h3 class="form-subtitle">Добавить связь</h3>
+              <form id="link-form" class="form form-inline-compact link-form">
+                <label class="field link-form-field">
+                  <span>Контакт</span>
+                  <div class="contact-autocomplete">
+                    <input type="text" id="link-contact-search" placeholder="Поиск по имени или фамилии…" autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-controls="link-contact-suggestions" />
+                    <input type="hidden" name="contact_id_b" id="link-contact-id" required />
+                    <ul id="link-contact-suggestions" class="contact-suggestions" role="listbox" aria-hidden="true"></ul>
+                  </div>
+                </label>
+                <label class="field link-form-field link-form-relationship">
+                  <span>Тип связи</span>
+                  <select name="relationship_type" required>
+                    <optgroup label="Профессиональные">
+                      <option value="colleague">Коллега</option>
+                      <option value="business">Деловой партнёр</option>
+                      <option value="mentor">Наставник</option>
+                      <option value="mentee">Подопечный</option>
+                    </optgroup>
+                    <optgroup label="Личные">
+                      <option value="friend">Друг</option>
+                      <option value="acquaintance">Знакомый</option>
+                    </optgroup>
+                    <optgroup label="Семья">
+                      <option value="spouse">Партнёр/супруг</option>
+                      <option value="parent">Родитель</option>
+                      <option value="child">Ребёнок</option>
+                      <option value="sibling">Брат/сестра</option>
+                      <option value="relative">Родственник</option>
+                    </optgroup>
+                    <option value="other">Другое</option>
+                  </select>
+                </label>
+                <label class="field link-form-field">
+                  <span>Контекст</span>
+                  <input type="text" name="context" placeholder="Через кого познакомились, в каком проекте" />
+                </label>
+                <label class="field field-inline link-form-field link-form-directed">
+                  <span>Направленная связь <i class="info-icon" tabindex="0" aria-label="Пояснение" data-tooltip="Симметричная связь — вы оба знаете друг друга в этой роли. Направленная — только вы считаете этого человека, например, наставником, но не наоборот.">?</i></span>
+                  <input type="checkbox" name="is_directed" class="checkbox-link-directed" />
+                </label>
+                <p id="link-message" class="form-message"></p>
+                <div class="form-actions-inline">
+                  <button id="link-cancel-edit" type="button" class="button button-outline" hidden>Отменить</button>
+                  <button id="link-submit-button" type="submit" class="button">Сохранить связь</button>
+                </div>
+              </form>
             </section>
-          </form>
+
+          </div>
         </div>
       </div>
     </main>

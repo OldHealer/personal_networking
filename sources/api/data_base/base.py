@@ -105,7 +105,7 @@ class BaseDAO:
         return True
 
 async def get_db_session() -> AsyncIterator[AsyncSession]:
-    """Dependency для FastAPI: получить сессию БД."""
+    """ Получить сессию БД. """
     async for session in db.get_session():
         yield session
 

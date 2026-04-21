@@ -1,4 +1,4 @@
-import { setFooterYear, setMessage } from "./ui.js";
+import { setFooterYear, setMessage, initTheme, setupThemeToggle } from "./ui.js";
 
 const tokenKey = "access_token";
 
@@ -85,10 +85,15 @@ const CONTACT_SECTION_FIELDS = {
   plans: ["goals", "ambitions"],
 };
 
+const CONTACT_RELATIONSHIP_VALUES = new Set([
+  "business", "colleague", "client", "partner", "mentor", "mentee",
+  "personal", "friend", "acquaintance", "family", "other",
+]);
+
 function fromFormDataForKeys(form, keysSet) {
   const fd = new FormData(form);
   const listFields = ["hobbies", "interests", "goals", "promises"];
-  const relationshipAllowed = new Set(["business", "personal", "other"]);
+  const relationshipAllowed = CONTACT_RELATIONSHIP_VALUES;
   const payload = {};
   for (const [key, value] of fd.entries()) {
     if (keysSet != null && !keysSet.has(key)) continue;
@@ -116,8 +121,7 @@ function fromFormData(form) {
 
 function contactToFormValues(c) {
   const listToText = (arr) => (Array.isArray(arr) && arr.length ? arr.join("\n") : "");
-  const relationshipAllowed = new Set(["business", "personal", "other"]);
-  const rel = relationshipAllowed.has(c.relationship_type) ? c.relationship_type : "";
+  const rel = CONTACT_RELATIONSHIP_VALUES.has(c.relationship_type) ? c.relationship_type : "";
   return {
     full_name: c.full_name ?? "",
     phone: c.phone ?? "",
@@ -140,12 +144,24 @@ function fillForm(form, values) {
   }
 }
 
+function autoResizeTextarea(ta) {
+  if (!ta || ta.tagName !== "TEXTAREA") return;
+  ta.style.height = "auto";
+  ta.style.height = Math.max(ta.scrollHeight, 64) + "px";
+}
+
+function resizeAllTextareas() {
+  document.querySelectorAll(".form-card .field textarea").forEach(autoResizeTextarea);
+}
+
 function fillContactForms(values) {
   const contactForm = document.getElementById("contact-form");
   if (contactForm) fillForm(contactForm, values);
 
   const plansForm = document.getElementById("contact-plans-form");
   if (plansForm) fillForm(plansForm, values);
+
+  resizeAllTextareas();
 }
 
 function updateContactTitle(contact) {
@@ -160,6 +176,7 @@ let currentLinks = [];
 let currentInteractions = [];
 let editingInteractionId = null;
 let editingInteractionPromises = [];
+let editingLinkId = null;
 
 async function fetchContact(id) {
   const token = getToken();
@@ -208,13 +225,19 @@ function renderPromises(contact) {
   promises.forEach((p) => {
     const li = document.createElement("li");
     const text = typeof p === "string" ? p : p.text || JSON.stringify(p);
-    const completedAt = p.completed_at;
+    const direction = typeof p === "object" ? p.direction : null;
+    const completedAt = typeof p === "object" ? p.completed_at : null;
+    const dirLabel = direction === "theirs"
+      ? `<span class="promise-direction promise-direction--theirs">Он/она:</span> `
+      : direction === "mine"
+        ? `<span class="promise-direction promise-direction--mine">Я:</span> `
+        : "";
     li.className = "promise-item";
     li.innerHTML = `
-      <span>${text}</span>
+      <span>${dirLabel}${escapeHtml(text)}</span>
       ${completedAt ? `<span class="muted"> · выполнено ${new Date(completedAt).toLocaleString("ru")}</span>` : ""}
     `;
-    if (!completedAt && p.id) {
+    if (!completedAt && typeof p === "object" && p.id) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "button button-small";
@@ -227,11 +250,17 @@ function renderPromises(contact) {
 }
 
 const RELATIONSHIP_TYPE_LABELS = {
+  acquaintance: "Знакомый",
   friend: "Друг",
   colleague: "Коллега",
+  business: "Деловой партнёр",
+  mentor: "Наставник",
+  mentee: "Подопечный",
   spouse: "Партнёр/супруг",
   parent: "Родитель",
   child: "Ребёнок",
+  sibling: "Брат/сестра",
+  relative: "Родственник",
   other: "Другое",
 };
 
@@ -243,6 +272,76 @@ function getOtherContactName(otherId) {
   if (!linkContactsList.length) return "Контакт";
   const c = linkContactsList.find((x) => String(x.id) === String(otherId));
   return c ? (c.full_name || "Без имени") : "Контакт";
+}
+
+function resetLinkForm() {
+  const form = document.getElementById("link-form");
+  const submitBtn = document.getElementById("link-submit-button");
+  const cancelBtn = document.getElementById("link-cancel-edit");
+  const searchInput = document.getElementById("link-contact-search");
+  const hiddenInput = document.getElementById("link-contact-id");
+
+  editingLinkId = null;
+
+  if (form) form.reset();
+  if (searchInput) { searchInput.value = ""; searchInput.disabled = false; }
+  if (hiddenInput) hiddenInput.value = "";
+  if (submitBtn) submitBtn.textContent = "Сохранить связь";
+  if (cancelBtn) cancelBtn.hidden = true;
+  setMessage("link-message", "");
+}
+
+function startEditingLink(link) {
+  const form = document.getElementById("link-form");
+  const submitBtn = document.getElementById("link-submit-button");
+  const cancelBtn = document.getElementById("link-cancel-edit");
+  const searchInput = document.getElementById("link-contact-search");
+  const hiddenInput = document.getElementById("link-contact-id");
+  if (!form || !link) return;
+
+  editingLinkId = String(link.id);
+
+  const otherId = String(link.contact_id_a) === String(currentContact.id) ? link.contact_id_b : link.contact_id_a;
+  const otherName = getOtherContactName(otherId);
+
+  if (searchInput) { searchInput.value = otherName; searchInput.disabled = true; }
+  if (hiddenInput) hiddenInput.value = String(otherId);
+  if (form.elements.relationship_type) form.elements.relationship_type.value = link.relationship_type || "";
+  if (form.elements.context) form.elements.context.value = link.context || "";
+  if (form.elements.is_directed) form.elements.is_directed.checked = Boolean(link.is_directed);
+
+  if (submitBtn) submitBtn.textContent = "Сохранить изменения";
+  if (cancelBtn) cancelBtn.hidden = false;
+
+  setMessage("link-message", "Режим редактирования связи.");
+  const viewportH = window.innerHeight || document.documentElement.clientHeight;
+  const rect = form.getBoundingClientRect();
+  const padding = 80;
+  const isInView = rect.top >= -padding && rect.bottom <= viewportH + padding;
+  if (!isInView) form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function deleteLink(linkId) {
+  const id = getContactId();
+  const token = getToken();
+  if (!id || !token || !linkId) return;
+  if (!confirm("Удалить эту связь?")) return;
+
+  setMessage("link-message", "Удаляем связь...");
+  const response = await fetch(`/api/v1/contacts/${id}/links/${linkId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (response.status === 401) { handleUnauthorized(response); return; }
+  if (response.status === 204 || response.ok) {
+    if (editingLinkId === String(linkId)) resetLinkForm();
+    setMessage("link-message", "Связь удалена.");
+    setTimeout(() => setMessage("link-message", ""), 2000);
+    await fetchLinks();
+    return;
+  }
+  const text = await response.text();
+  setMessage("link-message", `Ошибка удаления: ${text}`);
 }
 
 function renderLinks() {
@@ -266,35 +365,87 @@ function renderLinks() {
     const otherId =
       String(link.contact_id_a) === String(currentContact.id) ? link.contact_id_b : link.contact_id_a;
     const otherName = getOtherContactName(otherId);
-    li.innerHTML = `
-      <span><strong>${escapeHtml(typeLabel)}</strong> с контактом ${escapeHtml(otherName)}</span>
+
+    const content = document.createElement("div");
+    content.className = "link-item-content";
+    content.innerHTML = `
+      <span><strong>${escapeHtml(typeLabel)}</strong> · ${escapeHtml(otherName)}</span>
       ${context ? `<span class="muted"> · ${escapeHtml(context)}</span>` : ""}
     `;
+
+    const actions = document.createElement("div");
+    actions.className = "link-item-actions";
+
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "button button-small button-outline";
+    editBtn.textContent = "Редактировать";
+    editBtn.addEventListener("click", () => startEditingLink(link));
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "button button-small button-outline button-delete";
+    deleteBtn.textContent = "Удалить";
+    deleteBtn.addEventListener("click", () => deleteLink(link.id));
+
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+    li.appendChild(content);
+    li.appendChild(actions);
     listEl.appendChild(li);
   });
 }
 
-function interactionPromisesToText(promises) {
+function interactionPromisesToMineText(promises) {
   if (!Array.isArray(promises) || !promises.length) return "";
   return promises
+    .filter((p) => typeof p === "string" || !p.direction || p.direction === "mine")
     .map((p) => (typeof p === "string" ? p : p?.text || ""))
     .filter(Boolean)
     .join("\n");
 }
 
-function buildInteractionPromisesFromText(rawText, previousPromises = []) {
-  const lines = String(rawText || "")
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean);
+function interactionPromisesToTheirsText(promises) {
+  if (!Array.isArray(promises) || !promises.length) return "";
+  return promises
+    .filter((p) => typeof p === "object" && p.direction === "theirs")
+    .map((p) => p?.text || "")
+    .filter(Boolean)
+    .join("\n");
+}
 
-  return lines.map((line, index) => {
-    const previous = previousPromises[index];
-    if (previous && typeof previous === "object" && !Array.isArray(previous)) {
-      return { ...previous, text: line };
+function buildInteractionPromisesFromTexts(mineText, theirsText, previousPromises = []) {
+  const mineLines = String(mineText || "").split("\n").map((s) => s.trim()).filter(Boolean);
+  const theirsLines = String(theirsText || "").split("\n").map((s) => s.trim()).filter(Boolean);
+
+  const prevMine = previousPromises.filter(
+    (p) => typeof p === "string" || !p.direction || p.direction === "mine"
+  );
+  const prevTheirs = previousPromises.filter(
+    (p) => typeof p === "object" && p.direction === "theirs"
+  );
+
+  const result = [];
+
+  mineLines.forEach((line, i) => {
+    const prev = prevMine[i];
+    if (prev && typeof prev === "object") {
+      result.push({ ...prev, text: line, direction: "mine" });
+    } else {
+      result.push({ text: line, direction: "mine" });
     }
-    return line;
   });
+
+  theirsLines.forEach((line, i) => {
+    const prev = prevTheirs[i];
+    if (prev && typeof prev === "object") {
+      result.push({ ...prev, text: line, direction: "theirs" });
+    } else {
+      result.push({ text: line, direction: "theirs" });
+    }
+  });
+
+  return result;
 }
 
 function resetInteractionForm() {
@@ -306,7 +457,13 @@ function resetInteractionForm() {
   editingInteractionId = null;
   editingInteractionPromises = [];
 
-  if (form) form.reset();
+  if (form) {
+    form.reset();
+    // Автоматически подставляем текущее время чтобы не вводить вручную
+    if (form.elements.occurred_at && !form.elements.occurred_at.value) {
+      form.elements.occurred_at.value = toDatetimeLocal(new Date().toISOString());
+    }
+  }
   if (titleEl) titleEl.textContent = "Добавить взаимодействие";
   if (submitBtn) submitBtn.textContent = "Сохранить взаимодействие";
   if (cancelBtn) cancelBtn.hidden = true;
@@ -341,7 +498,8 @@ function startEditingInteraction(interaction) {
   form.elements.occurred_at.value = toDatetimeLocal(interaction.occurred_at);
   form.elements.channel.value = interaction.channel ?? "";
   form.elements.notes.value = interaction.notes ?? "";
-  form.elements.promises.value = interactionPromisesToText(editingInteractionPromises);
+  form.elements.promises_mine.value = interactionPromisesToMineText(editingInteractionPromises);
+  form.elements.promises_theirs.value = interactionPromisesToTheirsText(editingInteractionPromises);
 
   if (titleEl) titleEl.textContent = "Редактировать взаимодействие";
   if (submitBtn) submitBtn.textContent = "Сохранить изменения";
@@ -376,7 +534,12 @@ function renderInteractions() {
     const notes = it.notes || "";
     const promises = Array.isArray(it.promises) ? it.promises : [];
     const promisesText = promises
-      .map((p) => (typeof p === "string" ? p : p.text || JSON.stringify(p)))
+      .map((p) => {
+        const t = typeof p === "string" ? p : p.text || JSON.stringify(p);
+        const dir = typeof p === "object" ? p.direction : null;
+        const prefix = dir === "theirs" ? "он/она: " : dir === "mine" ? "я: " : "";
+        return prefix + t;
+      })
       .join("; ");
     li.innerHTML = `
       <div class="interaction-item-content">
@@ -757,6 +920,31 @@ async function createLink(event) {
   }
   const form = event.target;
   const fd = new FormData(form);
+  const relationshipType = String(fd.get("relationship_type") || "").trim() || "other";
+  const context = String(fd.get("context") || "").trim() || null;
+  const isDirected = fd.get("is_directed") === "on";
+
+  if (editingLinkId) {
+    const payload = { relationship_type: relationshipType, context, is_directed: isDirected };
+    setMessage("link-message", "Сохраняем изменения...");
+    const response = await fetch(`/api/v1/contacts/${id}/links/${editingLinkId}`, {
+      method: "PATCH",
+      headers: apiHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (response.status === 401) { handleUnauthorized(response); return; }
+    if (!response.ok) {
+      const text = await response.text();
+      setMessage("link-message", `Ошибка: ${text}`);
+      return;
+    }
+    resetLinkForm();
+    setMessage("link-message", "Связь обновлена.");
+    setTimeout(() => setMessage("link-message", ""), 2000);
+    await fetchLinks();
+    return;
+  }
+
   const contactIdB = String(fd.get("contact_id_b") || "").trim();
   if (!contactIdB) {
     setMessage("link-message", "Выберите контакт из списка (начните вводить имя и нажмите на контакт в списке).");
@@ -764,9 +952,9 @@ async function createLink(event) {
   }
   const payload = {
     contact_id_b: contactIdB,
-    relationship_type: String(fd.get("relationship_type") || "").trim() || "other",
-    context: String(fd.get("context") || "").trim() || null,
-    is_directed: fd.get("is_directed") === "on",
+    relationship_type: relationshipType,
+    context,
+    is_directed: isDirected,
   };
   setMessage("link-message", "Создаём связь...");
   const response = await fetch(`/api/v1/contacts/${id}/links`, {
@@ -774,18 +962,13 @@ async function createLink(event) {
     headers: apiHeaders(),
     body: JSON.stringify(payload),
   });
-  if (response.status === 401) {
-    handleUnauthorized(response);
-    return;
-  }
+  if (response.status === 401) { handleUnauthorized(response); return; }
   if (!response.ok) {
     const text = await response.text();
     setMessage("link-message", `Ошибка: ${text}`);
     return;
   }
-  form.reset();
-  const linkSearchInput = document.getElementById("link-contact-search");
-  if (linkSearchInput) linkSearchInput.value = "";
+  resetLinkForm();
   setMessage("link-message", "Связь создана.");
   setTimeout(() => setMessage("link-message", ""), 2000);
   await fetchLinks();
@@ -801,7 +984,7 @@ async function saveInteraction(event) {
   }
   const form = event.target;
   const fd = new FormData(form);
-  const promises = buildInteractionPromisesFromText(fd.get("promises"), editingInteractionPromises);
+  const promises = buildInteractionPromisesFromTexts(fd.get("promises_mine"), fd.get("promises_theirs"), editingInteractionPromises);
   const occurredRaw = fd.get("occurred_at");
   const payload = {
     occurred_at: occurredRaw ? new Date(occurredRaw).toISOString() : new Date().toISOString(),
@@ -904,8 +1087,14 @@ async function completePromise(promiseId) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
+  setupThemeToggle();
   setFooterYear();
   applyTokenFromHash();
+
+  document.querySelectorAll(".form-card .field textarea").forEach((ta) => {
+    ta.addEventListener("input", () => autoResizeTextarea(ta));
+  });
   const token = getToken();
   if (!token) {
     window.location.href = "/login.html";
@@ -930,9 +1119,15 @@ document.addEventListener("DOMContentLoaded", () => {
     initLinkContactAutocomplete();
   }
 
+  const linkCancelBtn = document.getElementById("link-cancel-edit");
+  if (linkCancelBtn) {
+    linkCancelBtn.addEventListener("click", resetLinkForm);
+  }
+
   const interactionForm = document.getElementById("interaction-form");
   if (interactionForm) {
     interactionForm.addEventListener("submit", saveInteraction);
+    resetInteractionForm();
   }
 
   const interactionCancelBtn = document.getElementById("interaction-cancel-edit");
