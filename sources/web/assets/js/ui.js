@@ -1,3 +1,29 @@
+let _toastTimer = null;
+
+export function showToast(message, type = "error") {
+  let toast = document.getElementById("app-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "app-toast";
+    toast.className = "toast";
+    toast.setAttribute("role", "alert");
+    toast.innerHTML = `<span class="toast-text"></span><button class="toast-close" aria-label="Закрыть">×</button>`;
+    toast.querySelector(".toast-close").addEventListener("click", () => hideToast());
+    document.body.appendChild(toast);
+  }
+  toast.querySelector(".toast-text").textContent = message;
+  toast.className = `toast toast--${type}`;
+  requestAnimationFrame(() => toast.classList.add("toast--visible"));
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(hideToast, 6000);
+}
+
+function hideToast() {
+  const toast = document.getElementById("app-toast");
+  if (!toast) return;
+  toast.classList.remove("toast--visible");
+}
+
 export function setFooterYear() {
   const target = document.getElementById("footer-year");
   if (!target) return;

@@ -92,30 +92,138 @@ a {
 
 .hero {
   position: relative;
-  padding: 5rem 0 8rem;
-  /* Градиент сверху, снизу прозрачный — виден слой с горами */
-  background: linear-gradient(180deg, #fff6ed 0%, #f7f2eb 40%, transparent 65%),
-    url("../img/mountains.svg") no-repeat bottom center;
-  background-size: 100% 100%, 160% auto;
-  background-color: #f0e9e0;
-  min-height: 28rem;
+  padding: 3rem 0 3.5rem;
+  background: linear-gradient(150deg, #fff9f5 0%, #fef2e8 45%, #fae5d2 100%);
+  background-color: #fff6ed;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  right: -8rem;
+  bottom: -10rem;
+  width: 36rem;
+  height: 36rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 108, 75, 0.09) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c96c4b;
+  margin: 0 0 0.75rem;
 }
 
 .hero h1 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  margin-bottom: 1rem;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  margin: 0 0 1rem;
+  line-height: 1.2;
 }
 
 .lead {
-  font-size: 1.1rem;
-  max-width: 720px;
+  font-size: 1.05rem;
+  max-width: 560px;
+  color: #6d5a48;
+  line-height: 1.65;
 }
 
 .hero-actions {
-  margin-top: 2rem;
+  margin-top: 1.75rem;
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------------
+   Секция "Как это устроено"
+--------------------------------------------------------------- */
+.section-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.4rem;
+}
+
+.section-lead {
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+}
+
+.features-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(91, 68, 47, 0.12);
+  border-color: #e3b089;
+}
+
+.feature-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6d5a48;
+  line-height: 1.55;
+}
+
+.feature-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+/* ---------------------------------------------------------------
+   Секция "Зачем это нужно"
+--------------------------------------------------------------- */
+.benefits-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 1.25rem;
+}
+
+.benefit-item {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+
+.benefit-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  line-height: 1;
+}
+
+.benefit-item strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+  color: #2b2a27;
+}
+
+.benefit-item p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
 
 .button {
@@ -139,7 +247,7 @@ a {
 }
 
 .section {
-  padding: 3.5rem 0;
+  padding: 2.5rem 0;
 }
 
 .section-muted {
@@ -248,25 +356,192 @@ a {
 .auth-page {
   display: flex;
   justify-content: center;
-  padding: 4rem 1.5rem;
+  align-items: flex-start;
+  padding: 2.5rem 1.5rem 3rem;
 }
 
 .auth-card {
   background: #ffffff;
-  padding: 2.5rem;
+  padding: 2rem 2.25rem 2.25rem;
   border-radius: 16px;
   border: 1px solid #efe0d2;
-  width: min(420px, 100%);
-  box-shadow: 0 12px 24px rgba(91, 68, 47, 0.08);
+  width: min(440px, 100%);
+  box-shadow: 0 12px 32px rgba(91, 68, 47, 0.1);
 }
 
-.auth-card h1 {
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2b2a27;
+  margin-bottom: 1.5rem;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #efe0d2;
+  margin-bottom: 1.25rem;
+}
+
+.auth-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #6d5a48;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.auth-tab:hover {
+  color: #2b2a27;
+}
+
+.auth-tab--active {
+  color: #c96c4b;
+  border-bottom-color: #c96c4b;
+}
+
+.auth-desc {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+
+.auth-form {
   margin-top: 0;
+  gap: 0.85rem;
 }
 
-.auth-card h2 {
-  margin-top: 2rem;
-  font-size: 1.25rem;
+.auth-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 0.25rem;
+  justify-content: center;
+  display: flex;
+}
+
+.auth-form .field input {
+  min-height: 2.75rem;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1px solid #e2d0bf;
+  background-color: #fffbf7;
+  color: #5c4a3a;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.auth-form .field input:hover {
+  border-color: #e3b089;
+}
+
+.auth-form .field input:focus {
+  outline: none;
+  border-color: #c96c4b;
+  box-shadow: 0 0 0 2px rgba(201, 108, 75, 0.2);
+}
+
+[data-theme="dark"] .auth-form .field input {
+  background: #1f1c18;
+  border-color: #4a3e34;
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .auth-form .field input::placeholder {
+  color: #5a4e44;
+}
+
+[data-theme="dark"] .auth-form .field input:focus {
+  border-color: #e07a58;
+  box-shadow: 0 0 0 2px rgba(224, 122, 88, 0.2);
+}
+
+.field-hint {
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: #a08b76;
+}
+
+/* ---------------------------------------------------------------
+   Toast-уведомления
+--------------------------------------------------------------- */
+.toast {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 9999;
+  background: #2b2a27;
+  color: #f0ece8;
+  padding: 0.8rem 2.5rem 0.8rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  max-width: 360px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  border-left: 3px solid #c96c4b;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.toast--error {
+  border-left-color: #e07a58;
+}
+
+.toast--info {
+  border-left-color: #6ab888;
+}
+
+.toast-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  color: #a09080;
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.1rem 0.25rem;
+}
+
+.toast-close:hover {
+  color: #f0ece8;
+}
+
+[data-theme="dark"] .toast {
+  background: #1f1c18;
+  border-color: #3a3028;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .toast--error {
+  border-left-color: #e07a58;
+}
+
+[data-theme="dark"] .toast--info {
+  border-left-color: #6ab888;
 }
 
 .muted {
@@ -1154,13 +1429,140 @@ a {
   color: #e07a58;
 }
 
-[data-theme="dark"] .section-divider,
-[data-theme="dark"] .divider {
-  background: #3a3028;
-}
-
 [data-theme="dark"] .card-title {
   color: #e2d8d0;
+}
+
+/* ---------------------------------------------------------------
+   Тёмная тема — исправления для index / login / success / error
+--------------------------------------------------------------- */
+[data-theme="dark"] .hero {
+  background: linear-gradient(150deg, #1f1c18 0%, #221e18 45%, #261f17 100%);
+  background-color: #1a1714;
+}
+
+[data-theme="dark"] .hero::after {
+  background: radial-gradient(circle, rgba(224, 122, 88, 0.07) 0%, transparent 65%);
+}
+
+[data-theme="dark"] .hero-eyebrow {
+  color: #e07a58;
+}
+
+[data-theme="dark"] .lead {
+  color: #9e8878;
+}
+
+[data-theme="dark"] .section-muted {
+  background: #1f1c18;
+}
+
+[data-theme="dark"] .feature-card:hover {
+  border-color: #e07a58;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .feature-card p {
+  color: #9e8878;
+}
+
+[data-theme="dark"] .benefit-item strong {
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .benefit-item p {
+  color: #9e8878;
+}
+
+[data-theme="dark"] .section-lead {
+  color: #9e8878;
+}
+
+[data-theme="dark"] .auth-card {
+  background: #242019;
+  border-color: #3a3028;
+}
+
+[data-theme="dark"] .auth-brand {
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .auth-tabs {
+  border-color: #3a3028;
+}
+
+[data-theme="dark"] .auth-tab {
+  color: #9e8878;
+}
+
+[data-theme="dark"] .auth-tab:hover {
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .auth-tab--active {
+  color: #e07a58;
+  border-bottom-color: #e07a58;
+}
+
+[data-theme="dark"] .field-hint {
+  color: #6a5a50;
+}
+
+[data-theme="dark"] .entity-flow {
+  color: #9e8878;
+}
+
+[data-theme="dark"] .flow-node {
+  background: #2a2520;
+  border-color: #3a3028;
+  color: #c8b8a8;
+}
+
+/* ---------------------------------------------------------------
+   Тёмная тема — форма и поля на contacts.html
+--------------------------------------------------------------- */
+[data-theme="dark"] .contacts-search-wrap input {
+  background: #1f1c18;
+  border-color: #4a3e34;
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .contacts-search-wrap input::placeholder {
+  color: #6a5a50;
+}
+
+[data-theme="dark"] .contacts-search-wrap input:focus {
+  border-color: #e07a58;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(224, 122, 88, 0.2);
+}
+
+[data-theme="dark"] .field-inline select {
+  background: #1f1c18;
+  border-color: #4a3e34;
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .form-subtitle {
+  color: #9e8878;
+}
+
+/* ---------------------------------------------------------------
+   Тёмная тема — автодополнение
+--------------------------------------------------------------- */
+[data-theme="dark"] .contact-suggestions li {
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .contact-suggestions li.contact-suggestions-message {
+  color: #9e8878;
+}
+
+/* ---------------------------------------------------------------
+   Тёмная тема — страница контакта: дополнения
+--------------------------------------------------------------- */
+[data-theme="dark"] .page-header .back-link {
+  color: #e07a58;
 }
 
 /* плавный переход для всех цветных элементов */
