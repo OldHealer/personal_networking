@@ -1,7 +1,9 @@
 """Сервисный слой для карточек контактов — обёртка над DAO с изоляцией по tenant_id."""
 
+from datetime import datetime, timedelta, timezone
+
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.data_base.base import BaseDAO, contacts_dao
@@ -24,8 +26,9 @@ class ContactService:
     def __init__(self, dao: BaseDAO):
         self.dao = dao
 
-    async def list_contacts( self, session: AsyncSession, tenant_id, page: int, per_page: int, sort: str):
-        """ Получение списка контактов с пагинацией и сортировкой (логика поверх модели). """
+    async def list_contacts(self, session: AsyncSession, tenant_id, page: int, per_page: int, sort: str,
+                             q: str | None = None, last_contact_before: int | None = None):
+        """ Получение списка контактов с пагинацией, сортировкой, поиском и фильтром "давно не общались". """
         last_interaction_subq = (
             select(
                 ContactInteraction.contact_id.label("contact_id"),
@@ -46,8 +49,29 @@ class ContactService:
             tenant_id,
         )
         count_stmt = _apply_tenant_filter(
-            select(func.count()).select_from(ContactCard), tenant_id
+            select(func.count(ContactCard.id)).select_from(ContactCard).outerjoin(
+                last_interaction_subq,
+                ContactCard.id == last_interaction_subq.c.contact_id,
+            ),
+            tenant_id,
         )
+
+        if q and q.strip():
+            pattern = f"%{q.strip()}%"
+            q_filter = or_(
+                ContactCard.full_name.ilike(pattern),
+                ContactCard.email.ilike(pattern),
+            )
+            base_stmt = base_stmt.where(q_filter)
+            count_stmt = count_stmt.where(q_filter)
+
+        if last_contact_before is not None and last_contact_before > 0:
+            threshold = datetime.now(timezone.utc) - timedelta(days=last_contact_before)
+            # Нет взаимодействий — считаем от created_at; иначе от last_interaction_at.
+            effective_ts = func.coalesce(last_interaction_subq.c.last_interaction_at, ContactCard.created_at)
+            stale_filter = effective_ts < threshold
+            base_stmt = base_stmt.where(stale_filter)
+            count_stmt = count_stmt.where(stale_filter)
 
         total = (await session.execute(count_stmt)).scalar_one()
         offset = (page - 1) * per_page
@@ -117,8 +141,10 @@ contact_service = ContactService(contacts_dao)
 
 
 # Публичный API для роутера (обратная совместимость)
-async def list_contacts(session, tenant_id, page, per_page, sort):
-    return await contact_service.list_contacts(session=session, tenant_id=tenant_id, page=page, per_page=per_page, sort=sort)
+async def list_contacts(session, tenant_id, page, per_page, sort, q=None, last_contact_before=None):
+    return await contact_service.list_contacts(session=session, tenant_id=tenant_id, page=page,
+                                               per_page=per_page, sort=sort, q=q,
+                                               last_contact_before=last_contact_before)
 
 
 async def create_contact(session, tenant_id, payload: ContactCardCreate):

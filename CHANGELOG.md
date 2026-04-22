@@ -6,6 +6,15 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Added
+- Server-side search `?q=` in `GET /api/v1/contacts` — ILIKE by `full_name` and `email`
+- Debounced search input (300ms) in contacts list UI — no longer limited to 50 loaded records
+- Filter `?last_contact_before=N` in `GET /api/v1/contacts` — "давно не общались N дней" (falls back to `created_at` when no interactions)
+- UI dropdown "Давно не общались" on contacts page: 7/30/90/180 days presets
+- Integration tests (31 total): contacts CRUD + search + stale filter + tenant isolation, links CRUD, interactions CRUD + promises aggregation and completion
+- `tests/` directory with `conftest.py` — isolated `rockfile_test` DB, mocked auth via `dependency_overrides`, httpx `AsyncClient` over `ASGITransport`
+- Dev dependencies: `pytest`, `pytest-asyncio` (configured in `pyproject.toml`)
+
 ### Changed
 - DEVELOPMENT_PLAN.md: marked completed phases (0–5, frontend), added Phase 8 Tests, updated priorities
 - ARCHITECTURE.md: updated directory structure to match reality, updated tech stack (LangGraph, FastMCP, Ollama, dark theme), fixed promise direction field (`mine/theirs`)
