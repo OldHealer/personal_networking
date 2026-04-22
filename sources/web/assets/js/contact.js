@@ -234,16 +234,37 @@ function renderPromises(contact) {
         : "";
     li.className = "promise-item";
     li.innerHTML = `
-      <span>${dirLabel}${escapeHtml(text)}</span>
-      ${completedAt ? `<span class="muted"> · выполнено ${new Date(completedAt).toLocaleString("ru")}</span>` : ""}
+      <span class="promise-text">${dirLabel}${escapeHtml(text)}</span>
+      ${completedAt ? `<span class="muted promise-completed-at">выполнено ${new Date(completedAt).toLocaleString("ru")}</span>` : ""}
     `;
-    if (!completedAt && typeof p === "object" && p.id) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "button button-small";
-      btn.textContent = "Отметить выполненным";
-      btn.addEventListener("click", () => completePromise(p.id));
-      li.appendChild(btn);
+    if (typeof p === "object" && p.id) {
+      if (!completedAt) {
+        const complete = document.createElement("button");
+        complete.type = "button";
+        complete.className = "promise-complete-btn";
+        complete.title = "Отметить выполненным";
+        complete.setAttribute("aria-label", "Отметить выполненным");
+        complete.innerHTML = "<span aria-hidden=\"true\">✓</span> Выполнить";
+        complete.addEventListener("click", () => completePromise(p.id));
+        li.appendChild(complete);
+
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "promise-icon-btn";
+        edit.title = "Редактировать";
+        edit.setAttribute("aria-label", "Редактировать");
+        edit.innerHTML = "✎";
+        edit.addEventListener("click", () => startEditingPromise(li, p));
+        li.appendChild(edit);
+      }
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "promise-icon-btn promise-icon-btn--danger";
+      del.title = "Удалить";
+      del.setAttribute("aria-label", "Удалить");
+      del.innerHTML = "🗑";
+      del.addEventListener("click", () => deletePromise(p.id));
+      li.appendChild(del);
     }
     listEl.appendChild(li);
   });
@@ -1084,6 +1105,93 @@ async function completePromise(promiseId) {
   }
   await loadContact();
   await fetchInteractions();
+}
+
+async function updatePromiseText(promiseId, newText) {
+  const id = getContactId();
+  const token = getToken();
+  if (!id || !token) return false;
+  const response = await fetch(`/api/v1/contacts/${id}/promises/${promiseId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ text: newText }),
+  });
+  if (response.status === 401) { handleUnauthorized(response); return false; }
+  if (!response.ok) {
+    const text = await response.text();
+    setMessage("contact-page-message", `Не удалось обновить обещание: ${text}`);
+    return false;
+  }
+  await loadContact();
+  await fetchInteractions();
+  return true;
+}
+
+async function deletePromise(promiseId) {
+  if (!window.confirm("Удалить это обещание?")) return;
+  const id = getContactId();
+  const token = getToken();
+  if (!id || !token) return;
+  const response = await fetch(`/api/v1/contacts/${id}/promises/${promiseId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (response.status === 401) { handleUnauthorized(response); return; }
+  if (!response.ok) {
+    const text = await response.text();
+    setMessage("contact-page-message", `Не удалось удалить обещание: ${text}`);
+    return;
+  }
+  await loadContact();
+  await fetchInteractions();
+}
+
+function startEditingPromise(li, promise) {
+  const originalText = typeof promise === "object" ? (promise.text || "") : String(promise);
+  const direction = typeof promise === "object" ? promise.direction : null;
+  const dirLabel = direction === "theirs"
+    ? `<span class="promise-direction promise-direction--theirs">Он/она:</span>`
+    : direction === "mine"
+      ? `<span class="promise-direction promise-direction--mine">Я:</span>`
+      : "";
+  li.innerHTML = "";
+  li.classList.add("promise-item--editing");
+  const wrap = document.createElement("span");
+  wrap.className = "promise-text promise-edit-wrap";
+  wrap.innerHTML = dirLabel + " ";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "promise-edit-input";
+  input.value = originalText;
+  wrap.appendChild(input);
+  li.appendChild(wrap);
+
+  const save = document.createElement("button");
+  save.type = "button";
+  save.className = "promise-complete-btn";
+  save.textContent = "Сохранить";
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.className = "promise-icon-btn";
+  cancel.title = "Отменить";
+  cancel.setAttribute("aria-label", "Отменить");
+  cancel.innerHTML = "✕";
+  li.appendChild(save);
+  li.appendChild(cancel);
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+
+  const doSave = async () => {
+    const newText = input.value.trim();
+    if (!newText || newText === originalText) { await loadContact(); return; }
+    await updatePromiseText(promise.id, newText);
+  };
+  save.addEventListener("click", doSave);
+  cancel.addEventListener("click", () => { loadContact(); });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); doSave(); }
+    else if (e.key === "Escape") { e.preventDefault(); loadContact(); }
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {

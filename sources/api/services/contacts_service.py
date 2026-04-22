@@ -27,8 +27,9 @@ class ContactService:
         self.dao = dao
 
     async def list_contacts(self, session: AsyncSession, tenant_id, page: int, per_page: int, sort: str,
-                             q: str | None = None, last_contact_before: int | None = None):
-        """ Получение списка контактов с пагинацией, сортировкой, поиском и фильтром "давно не общались". """
+                             q: str | None = None, last_contact_before: int | None = None,
+                             relationship_type: str | None = None, has_birthday_soon: int | None = None):
+        """ Получение списка контактов с пагинацией, сортировкой, поиском и фильтрами. """
         last_interaction_subq = (
             select(
                 ContactInteraction.contact_id.label("contact_id"),
@@ -38,8 +39,13 @@ class ContactService:
             .subquery()
         )
 
-        sort_map = {"name": ContactCard.full_name, "created_at": ContactCard.created_at,}
-        sort_column = sort_map.get(sort, ContactCard.full_name)
+        if sort == "last_contact_at":
+            # Контакты без взаимодействий — в конец.
+            sort_clause = last_interaction_subq.c.last_interaction_at.desc().nulls_last()
+        elif sort == "created_at":
+            sort_clause = ContactCard.created_at.desc()
+        else:
+            sort_clause = ContactCard.full_name.asc()
 
         base_stmt = _apply_tenant_filter(
             select(ContactCard, last_interaction_subq.c.last_interaction_at).outerjoin(
@@ -73,10 +79,24 @@ class ContactService:
             base_stmt = base_stmt.where(stale_filter)
             count_stmt = count_stmt.where(stale_filter)
 
+        if relationship_type:
+            rel_filter = ContactCard.relationship_type == relationship_type
+            base_stmt = base_stmt.where(rel_filter)
+            count_stmt = count_stmt.where(rel_filter)
+
+        if has_birthday_soon is not None and has_birthday_soon >= 0:
+            # Кольцевая разница в днях через day-of-year — корректно обрабатывает конец года.
+            doy_bd = func.extract("doy", ContactCard.birthday)
+            doy_today = func.extract("doy", func.current_date())
+            days_until = (doy_bd - doy_today + 366) % 366
+            bd_filter = (ContactCard.birthday.isnot(None)) & (days_until <= has_birthday_soon)
+            base_stmt = base_stmt.where(bd_filter)
+            count_stmt = count_stmt.where(bd_filter)
+
         total = (await session.execute(count_stmt)).scalar_one()
         offset = (page - 1) * per_page
         result = await session.execute(
-            base_stmt.order_by(sort_column).offset(offset).limit(per_page)
+            base_stmt.order_by(sort_clause).offset(offset).limit(per_page)
         )
         rows = result.all()
         items = []
@@ -141,10 +161,13 @@ contact_service = ContactService(contacts_dao)
 
 
 # Публичный API для роутера (обратная совместимость)
-async def list_contacts(session, tenant_id, page, per_page, sort, q=None, last_contact_before=None):
+async def list_contacts(session, tenant_id, page, per_page, sort, q=None, last_contact_before=None,
+                        relationship_type=None, has_birthday_soon=None):
     return await contact_service.list_contacts(session=session, tenant_id=tenant_id, page=page,
                                                per_page=per_page, sort=sort, q=q,
-                                               last_contact_before=last_contact_before)
+                                               last_contact_before=last_contact_before,
+                                               relationship_type=relationship_type,
+                                               has_birthday_soon=has_birthday_soon)
 
 
 async def create_contact(session, tenant_id, payload: ContactCardCreate):

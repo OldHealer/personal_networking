@@ -22,7 +22,11 @@ async def _get_contact_for_tenant(session: AsyncSession, tenant_id, contact_id: 
 
 
 async def _rebuild_promises_for_contact(session: AsyncSession, contact: ContactCard) -> None:
-    """Агрегирует обещания по всем взаимодействиям в ContactCard.promises."""
+    """Агрегирует обещания по всем взаимодействиям в ContactCard.promises.
+
+    Также гарантирует, что у каждого обещания внутри interaction.promises есть стабильный id —
+    нужно для последующих PATCH/DELETE/complete по promise_id.
+    """
     stmt = select(ContactInteraction).where(ContactInteraction.contact_id == contact.id).order_by(
         ContactInteraction.occurred_at.desc()
     )
@@ -31,13 +35,18 @@ async def _rebuild_promises_for_contact(session: AsyncSession, contact: ContactC
 
     aggregated: list[dict] = []
     for interaction in interactions:
+        normalized: list[dict] = []
         for raw in interaction.promises or []:
             item = dict(raw) if isinstance(raw, dict) else {"text": str(raw)}
-            if "id" not in item:
+            if not item.get("id"):
                 item["id"] = str(uuid4())
-            item.setdefault("interaction_id", str(interaction.id))
             item.setdefault("completed_at", None)
-            aggregated.append(item)
+            normalized.append(item)
+            agg = dict(item)
+            agg["interaction_id"] = str(interaction.id)
+            aggregated.append(agg)
+        # Пересохраняем в interaction, чтобы id остались в источнике.
+        interaction.promises = normalized
 
     contact.promises = aggregated
     await session.commit()
@@ -132,6 +141,94 @@ async def delete_interaction_for_contact(
     await session.commit()
 
     # Пересчитываем promises
+    await _rebuild_promises_for_contact(session, contact)
+
+
+async def _find_source_interaction(session: AsyncSession, contact_id: UUID, interaction_id: UUID) -> ContactInteraction | None:
+    stmt = select(ContactInteraction).where(
+        ContactInteraction.id == interaction_id,
+        ContactInteraction.contact_id == contact_id,
+    )
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+async def update_promise_for_contact(
+    session: AsyncSession,
+    tenant_id,
+    contact_id: UUID,
+    promise_id: UUID,
+    text: str | None,
+    direction: str | None,
+):
+    contact = await _get_contact_for_tenant(session, tenant_id, contact_id)
+
+    source_interaction_id: str | None = None
+    for raw in contact.promises or []:
+        item = dict(raw) if isinstance(raw, dict) else {}
+        if str(item.get("id")) == str(promise_id):
+            source_interaction_id = item.get("interaction_id")
+            break
+    if source_interaction_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promise not found")
+
+    interaction = await _find_source_interaction(session, contact_id, UUID(str(source_interaction_id)))
+    if interaction is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source interaction not found")
+
+    new_promises: list[dict] = []
+    touched = False
+    for raw_p in interaction.promises or []:
+        p = dict(raw_p) if isinstance(raw_p, dict) else {"text": str(raw_p)}
+        if str(p.get("id")) == str(promise_id):
+            if text is not None:
+                p["text"] = text
+            if direction is not None:
+                p["direction"] = direction
+            touched = True
+        new_promises.append(p)
+    if not touched:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promise not found")
+
+    interaction.promises = new_promises
+    await session.commit()
+    await _rebuild_promises_for_contact(session, contact)
+
+
+async def delete_promise_for_contact(
+    session: AsyncSession,
+    tenant_id,
+    contact_id: UUID,
+    promise_id: UUID,
+):
+    contact = await _get_contact_for_tenant(session, tenant_id, contact_id)
+
+    source_interaction_id: str | None = None
+    for raw in contact.promises or []:
+        item = dict(raw) if isinstance(raw, dict) else {}
+        if str(item.get("id")) == str(promise_id):
+            source_interaction_id = item.get("interaction_id")
+            break
+    if source_interaction_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promise not found")
+
+    interaction = await _find_source_interaction(session, contact_id, UUID(str(source_interaction_id)))
+    if interaction is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source interaction not found")
+
+    filtered: list[dict] = []
+    removed = False
+    for raw_p in interaction.promises or []:
+        p = dict(raw_p) if isinstance(raw_p, dict) else {"text": str(raw_p)}
+        if str(p.get("id")) == str(promise_id):
+            removed = True
+            continue
+        filtered.append(p)
+    if not removed:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promise not found")
+
+    interaction.promises = filtered
+    await session.commit()
     await _rebuild_promises_for_contact(session, contact)
 
 

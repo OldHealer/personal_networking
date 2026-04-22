@@ -7,11 +7,18 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- Full-text search endpoint `GET /api/v1/search?q=` — tsvector (`russian`) + GIN indexes across `contact_cards` (name, address, ambitions, hobbies, interests, goals) and `contact_interactions` (notes, promises, mentions). Returns ranked hits with `ts_headline` snippets highlighted via `<mark>`. Supports `websearch_to_tsquery` syntax (quotes, OR). Tenant-isolated.
+- UI: "Глубокий поиск" card on contacts page — debounced input hits `/api/v1/search`, renders separate lists of matched contacts and interactions with highlighted snippets; each hit links to the contact page.
+- Generated tsvector columns `search_tsv` + GIN indexes created via idempotent bootstrap on app startup (`utils/search_bootstrap.py`) — normalizes JSON fields through `jsonb::text` to avoid `\uXXXX` tokenization of Cyrillic.
+- 7 integration tests for `/api/v1/search` (contact fields, array JSON fields, interaction notes, empty query, tenant isolation, ranking, limit)
 - Server-side search `?q=` in `GET /api/v1/contacts` — ILIKE by `full_name` and `email`
 - Debounced search input (300ms) in contacts list UI — no longer limited to 50 loaded records
 - Filter `?last_contact_before=N` in `GET /api/v1/contacts` — "давно не общались N дней" (falls back to `created_at` when no interactions)
-- UI dropdown "Давно не общались" on contacts page: 7/30/90/180 days presets
-- Integration tests (31 total): contacts CRUD + search + stale filter + tenant isolation, links CRUD, interactions CRUD + promises aggregation and completion
+- Filter `?relationship_type=colleague` in contacts list
+- Filter `?has_birthday_soon=N` — ДР в ближайшие N дней (day-of-year ring arithmetic, корректно работает через границу года)
+- Sort `?sort=last_contact_at` with NULLS LAST (контакты без встреч уезжают в конец)
+- UI dropdowns on contacts page: "Тип отношений", "Давно не общались" (7/30/90/180), "Дни рождения" (7/14/30/90), "По дате последней встречи" в сортировке
+- Integration tests (35 total): contacts CRUD + search + filters (stale/relationship/birthday) + sort + tenant isolation, links CRUD, interactions CRUD + promises aggregation and completion
 - `tests/` directory with `conftest.py` — isolated `rockfile_test` DB, mocked auth via `dependency_overrides`, httpx `AsyncClient` over `ASGITransport`
 - Dev dependencies: `pytest`, `pytest-asyncio` (configured in `pyproject.toml`)
 
