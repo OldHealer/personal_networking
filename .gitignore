@@ -54,4 +54,12 @@ coverage.xml
 .dmypy.json
 .pyre/
 
+# Claude Code
+CLAUDE.md
+.claude/
+
+# Логи и отладочные файлы
+logs/
+sources/debug.py
+
 
