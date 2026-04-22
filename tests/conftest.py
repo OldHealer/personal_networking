@@ -27,6 +27,7 @@ from api.data_base.base import db, get_db_session  # noqa: E402
 from api.data_base.models import AppUser, Base, Tenant  # noqa: E402
 from api.auth.deps import CurrentUser, get_current_user  # noqa: E402
 from api.auth.keycloak_module import TokenPayload  # noqa: E402
+from utils.search_bootstrap import ensure_fulltext_search  # noqa: E402
 
 
 async def _ensure_test_db_exists() -> None:
@@ -56,6 +57,7 @@ async def _prepared_db():
     async with db.engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+    await ensure_fulltext_search(db.engine)
     yield
     async with db.engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -105,6 +107,7 @@ def _build_app():
     from api.routers.v1.contacts import contacts_router
     from api.routers.v1.contact_links import contact_links_router
     from api.routers.v1.contact_interactions import contact_interactions_router
+    from api.routers.v1.search import search_router
 
     # Переиспользуем те же exception handlers, что и в проде.
     from api.fastapi_app import (
@@ -119,6 +122,7 @@ def _build_app():
     app.include_router(contacts_router)
     app.include_router(contact_links_router)
     app.include_router(contact_interactions_router)
+    app.include_router(search_router)
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(Exception, generic_exception_handler)

@@ -21,8 +21,10 @@ from api.routers.v1.agents import agents_router
 from api.routers.v1.contacts import contacts_router
 from api.routers.v1.contact_links import contact_links_router
 from api.routers.v1.contact_interactions import contact_interactions_router
+from api.routers.v1.search import search_router
 from api.data_base.base import db
 from utils.db_bootstrap import ensure_database_exists, run_migrations
+from utils.search_bootstrap import ensure_fulltext_search
 from settings import config
 
 from utils.logger_loguru import setup_audit_logger_loguru, get_logger
@@ -54,6 +56,9 @@ async def lifespan(app: FastAPI):
             log.info("Alembic не настроен. Создаю таблицы через SQLAlchemy.")
             await db.init_models(base=Base)
 
+        # Полнотекстовый поиск: генерируемые tsvector-колонки + GIN-индексы (идемпотентно).
+        await ensure_fulltext_search(db.engine)
+
         log.info(f'Приложение персонального нетворкинга запущено')
 
         # Регистрация маршрутов
@@ -61,6 +66,7 @@ async def lifespan(app: FastAPI):
         app.include_router(contacts_router)
         app.include_router(contact_links_router)
         app.include_router(contact_interactions_router)
+        app.include_router(search_router)
         app.include_router(agents_router)
 
         # Передача управления FastAPI

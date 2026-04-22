@@ -152,6 +152,13 @@ class ContactInteractionUpdate(BaseModel):
     mentions: list | None = Field(None, description="Обновлённый список упоминаний")
 
 
+class PromiseUpdate(BaseModel):
+    """Частичное обновление отдельного обещания."""
+
+    text: str | None = Field(None, description="Новый текст обещания")
+    direction: str | None = Field(None, description="Направление: mine | theirs")
+
+
 class ContactInteractionResponse(ContactInteractionBase):
     """Ответ по взаимодействию."""
 

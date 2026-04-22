@@ -188,6 +188,71 @@ async def test_last_contact_before_validation(client):
 
 
 @pytest.mark.asyncio
+async def test_filter_by_relationship_type(client):
+    await client.post(BASE, json={"full_name": "Коллега", "relationship_type": "colleague"})
+    await client.post(BASE, json={"full_name": "Друг", "relationship_type": "friend"})
+    await client.post(BASE, json={"full_name": "Без типа"})
+
+    resp = await client.get(BASE, params={"relationship_type": "colleague"})
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["items"][0]["full_name"] == "Коллега"
+
+
+@pytest.mark.asyncio
+async def test_sort_by_last_contact_at(client):
+    """Сортировка: самые свежие встречи сверху, без встреч — в конец."""
+    from datetime import datetime, timedelta, timezone
+
+    a = (await client.post(BASE, json={"full_name": "А_свежий"})).json()["id"]
+    b = (await client.post(BASE, json={"full_name": "Б_давний"})).json()["id"]
+    await client.post(BASE, json={"full_name": "В_без_встреч"})
+
+    now = datetime.now(timezone.utc)
+    await client.post(f"{BASE}/{a}/interactions", json={"occurred_at": now.isoformat()})
+    await client.post(f"{BASE}/{b}/interactions",
+                      json={"occurred_at": (now - timedelta(days=10)).isoformat()})
+
+    resp = await client.get(BASE, params={"sort": "last_contact_at"})
+    names = [i["full_name"] for i in resp.json()["items"]]
+    assert names == ["А_свежий", "Б_давний", "В_без_встреч"]
+
+
+@pytest.mark.asyncio
+async def test_has_birthday_soon(client):
+    """Контакты с ДР в пределах N дней должны попадать в результат."""
+    from datetime import date, timedelta
+
+    today = date.today()
+    in_5_days = today + timedelta(days=5)
+    in_60_days = today + timedelta(days=60)
+
+    await client.post(BASE, json={"full_name": "Близко", "birthday": in_5_days.isoformat()})
+    await client.post(BASE, json={"full_name": "Далеко", "birthday": in_60_days.isoformat()})
+    await client.post(BASE, json={"full_name": "Без_ДР"})
+
+    resp = await client.get(BASE, params={"has_birthday_soon": 14})
+    names = [i["full_name"] for i in resp.json()["items"]]
+    assert "Близко" in names
+    assert "Далеко" not in names
+    assert "Без_ДР" not in names
+
+
+@pytest.mark.asyncio
+async def test_has_birthday_soon_year_wraparound(client):
+    """ДР через 3 дня от сегодня работает, даже если год ДР — прошлый."""
+    from datetime import date, timedelta
+
+    near = date.today() + timedelta(days=3)
+    near_old_year = date(1990, near.month, near.day)
+
+    await client.post(BASE, json={"full_name": "Близко", "birthday": near_old_year.isoformat()})
+
+    resp = await client.get(BASE, params={"has_birthday_soon": 7})
+    assert resp.json()["total"] == 1
+
+
+@pytest.mark.asyncio
 async def test_tenant_isolation(client, db_session):
     """Контакт из чужого тенанта не должен возвращаться в списке."""
     from api.data_base.models import ContactCard, Tenant

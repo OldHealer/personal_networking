@@ -89,6 +89,22 @@
           <div id="prepare-meeting-result" class="meeting-agent-result muted" style="white-space: pre-wrap;"></div>
         </section>
 
+        <section class="card form-card">
+          <h2>Глубокий поиск</h2>
+          <p class="muted" style="margin-top:-0.25rem">
+            По заметкам, обещаниям, интересам, целям и амбициям — во всех карточках и взаимодействиях.
+          </p>
+          <form id="fulltext-form" class="form form-inline-compact" autocomplete="off">
+            <label class="field" style="flex:1 1 320px">
+              <span class="visually-hidden">Запрос</span>
+              <input type="search" id="fulltext-query"
+                     placeholder='Например: «Лиссабон», «python OR rust», «"мой проект"»' />
+            </label>
+            <button class="button" type="submit">Найти</button>
+          </form>
+          <div id="fulltext-results" class="fulltext-results"></div>
+        </section>
+
         <section class="contacts-list">
           <div class="list-header">
             <h2>Все контакты</h2>
@@ -96,11 +112,31 @@
               <span class="visually-hidden">Поиск</span>
               <input type="search" id="contacts-search" placeholder="Поиск по имени или фамилии…" autocomplete="off" />
             </label>
+          </div>
+          <div class="list-filters">
             <label class="field field-inline">
               <span>Сортировка</span>
               <select id="contacts-sort">
                 <option value="name">По имени</option>
                 <option value="created_at">По дате создания</option>
+                <option value="last_contact_at">По дате последней встречи</option>
+              </select>
+            </label>
+            <label class="field field-inline">
+              <span>Тип отношений</span>
+              <select id="contacts-relationship">
+                <option value="">Все</option>
+                <option value="business">Деловой</option>
+                <option value="colleague">Коллега</option>
+                <option value="client">Клиент</option>
+                <option value="partner">Партнёр</option>
+                <option value="mentor">Наставник</option>
+                <option value="mentee">Подопечный</option>
+                <option value="personal">Личный</option>
+                <option value="friend">Друг</option>
+                <option value="acquaintance">Знакомый</option>
+                <option value="family">Семья</option>
+                <option value="other">Другое</option>
               </select>
             </label>
             <label class="field field-inline">
@@ -111,6 +147,16 @@
                 <option value="30">более 30 дней</option>
                 <option value="90">более 90 дней</option>
                 <option value="180">более 180 дней</option>
+              </select>
+            </label>
+            <label class="field field-inline">
+              <span>Дни рождения</span>
+              <select id="contacts-birthday">
+                <option value="">—</option>
+                <option value="7">в ближайшие 7 дней</option>
+                <option value="14">в ближайшие 14 дней</option>
+                <option value="30">в ближайшие 30 дней</option>
+                <option value="90">в ближайшие 90 дней</option>
               </select>
             </label>
           </div>

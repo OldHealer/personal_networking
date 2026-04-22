@@ -5,10 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.deps import CurrentUser, get_current_user
 from api.data_base.base import get_db_session
-from api.schemas.contacts import (ContactInteractionCreate, ContactInteractionResponse, ContactInteractionUpdate,)
-from api.services.interactions_service import (complete_promise_for_contact, create_interaction_for_contact, 
-                                               delete_interaction_for_contact, list_interactions_for_contact, 
-                                               update_interaction_for_contact,)
+from api.schemas.contacts import (ContactInteractionCreate, ContactInteractionResponse, ContactInteractionUpdate,
+                                  PromiseUpdate,)
+from api.services.interactions_service import (complete_promise_for_contact, create_interaction_for_contact,
+                                               delete_interaction_for_contact, delete_promise_for_contact,
+                                               list_interactions_for_contact, update_interaction_for_contact,
+                                               update_promise_for_contact,)
 
 
 contact_interactions_router = APIRouter(prefix="/api/v1/contacts", tags=["Contact Interactions"])
@@ -97,6 +99,49 @@ async def complete_promise(
     session: AsyncSession = Depends(get_db_session),
 ):
     await complete_promise_for_contact(
+        session=session,
+        tenant_id=current_user.db_user.tenant_id,
+        contact_id=contact_id,
+        promise_id=promise_id,
+    )
+    return None
+
+
+@contact_interactions_router.patch(
+    "/{contact_id}/promises/{promise_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Обновить обещание (текст/направление)",
+)
+async def update_promise(
+    contact_id: UUID,
+    promise_id: UUID,
+    payload: PromiseUpdate,
+    current_user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    await update_promise_for_contact(
+        session=session,
+        tenant_id=current_user.db_user.tenant_id,
+        contact_id=contact_id,
+        promise_id=promise_id,
+        text=payload.text,
+        direction=payload.direction,
+    )
+    return None
+
+
+@contact_interactions_router.delete(
+    "/{contact_id}/promises/{promise_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить обещание",
+)
+async def delete_promise(
+    contact_id: UUID,
+    promise_id: UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    await delete_promise_for_contact(
         session=session,
         tenant_id=current_user.db_user.tenant_id,
         contact_id=contact_id,

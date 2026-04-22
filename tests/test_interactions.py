@@ -138,6 +138,77 @@ async def test_complete_promise_not_found(client):
 
 
 @pytest.mark.asyncio
+async def test_update_promise_text(client):
+    cid = await _make_contact(client)
+    await client.post(
+        f"{CONTACTS}/{cid}/interactions",
+        json={
+            "occurred_at": _iso(datetime.now(timezone.utc)),
+            "promises": [{"text": "исходный текст", "direction": "mine"}],
+        },
+    )
+    pid = (await client.get(f"{CONTACTS}/{cid}")).json()["promises"][0]["id"]
+
+    resp = await client.patch(f"{CONTACTS}/{cid}/promises/{pid}", json={"text": "новый текст"})
+    assert resp.status_code == 204, resp.text
+
+    updated = (await client.get(f"{CONTACTS}/{cid}")).json()["promises"][0]
+    assert updated["text"] == "новый текст"
+    assert updated["direction"] == "mine"
+
+
+@pytest.mark.asyncio
+async def test_update_promise_direction(client):
+    cid = await _make_contact(client)
+    await client.post(
+        f"{CONTACTS}/{cid}/interactions",
+        json={
+            "occurred_at": _iso(datetime.now(timezone.utc)),
+            "promises": [{"text": "что-то", "direction": "mine"}],
+        },
+    )
+    pid = (await client.get(f"{CONTACTS}/{cid}")).json()["promises"][0]["id"]
+
+    await client.patch(f"{CONTACTS}/{cid}/promises/{pid}", json={"direction": "theirs"})
+    updated = (await client.get(f"{CONTACTS}/{cid}")).json()["promises"][0]
+    assert updated["direction"] == "theirs"
+
+
+@pytest.mark.asyncio
+async def test_delete_promise(client):
+    cid = await _make_contact(client)
+    await client.post(
+        f"{CONTACTS}/{cid}/interactions",
+        json={
+            "occurred_at": _iso(datetime.now(timezone.utc)),
+            "promises": [
+                {"text": "первое", "direction": "mine"},
+                {"text": "второе", "direction": "theirs"},
+            ],
+        },
+    )
+    before = (await client.get(f"{CONTACTS}/{cid}")).json()["promises"]
+    assert len(before) == 2
+    target = next(p for p in before if p["text"] == "первое")
+
+    resp = await client.delete(f"{CONTACTS}/{cid}/promises/{target['id']}")
+    assert resp.status_code == 204
+
+    after = (await client.get(f"{CONTACTS}/{cid}")).json()["promises"]
+    assert len(after) == 1
+    assert after[0]["text"] == "второе"
+
+
+@pytest.mark.asyncio
+async def test_delete_promise_not_found(client):
+    cid = await _make_contact(client)
+    resp = await client.delete(
+        f"{CONTACTS}/{cid}/promises/00000000-0000-0000-0000-000000000000"
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_delete_interaction_rebuilds_promises(client):
     """При удалении взаимодействия обещания уходят из карточки."""
     cid = await _make_contact(client)

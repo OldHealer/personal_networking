@@ -30,6 +30,8 @@ const state = {
   sort: "name",
   searchQuery: "",
   staleDays: "",
+  relationshipType: "",
+  birthdaySoon: "",
 };
 
 const tokenKey = "access_token";
@@ -64,6 +66,10 @@ const renderContacts = (items) => {
       empty.textContent = "Ничего не найдено по запросу.";
     } else if (state.staleDays) {
       empty.textContent = `Нет контактов, с которыми не общались более ${state.staleDays} дней.`;
+    } else if (state.birthdaySoon) {
+      empty.textContent = `Нет контактов с днём рождения в ближайшие ${state.birthdaySoon} дней.`;
+    } else if (state.relationshipType) {
+      empty.textContent = "Нет контактов с выбранным типом отношений.";
     } else {
       empty.textContent = "Пока нет контактов.";
     }
@@ -356,6 +362,116 @@ async function prepareMeeting() {
   }
 }
 
+// --- Глубокий (полнотекстовый) поиск ---
+
+function formatOccurredAt(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "";
+  return d.toLocaleString("ru-RU", { dateStyle: "medium", timeStyle: "short" });
+}
+
+// Отрисовывает snippet безопасно: экранирует всё, а <mark>…</mark> от ts_headline возвращает в разметку.
+function renderSnippet(snippet) {
+  if (!snippet) return "";
+  const escaped = escapeHtml(snippet);
+  return escaped.replace(/&lt;mark&gt;/g, "<mark>").replace(/&lt;\/mark&gt;/g, "</mark>");
+}
+
+function renderFulltextResults(data) {
+  const el = document.getElementById("fulltext-results");
+  if (!el) return;
+
+  const contacts = Array.isArray(data.contacts) ? data.contacts : [];
+  const interactions = Array.isArray(data.interactions) ? data.interactions : [];
+
+  if (!contacts.length && !interactions.length) {
+    el.innerHTML = `<p class="muted">Ничего не найдено.</p>`;
+    return;
+  }
+
+  const parts = [];
+  parts.push(`<p class="muted fulltext-summary">Найдено: ${contacts.length} контакт(ов), ${interactions.length} взаимодействие(й).</p>`);
+
+  if (contacts.length) {
+    parts.push(`<h3 class="fulltext-section-title">Контакты</h3>`);
+    parts.push(`<ul class="fulltext-list">`);
+    for (const c of contacts) {
+      const relLabel = c.relationship_type ? (RELATIONSHIP_LABELS[c.relationship_type] || c.relationship_type) : "";
+      parts.push(`
+        <li class="fulltext-item">
+          <a href="/contact.html?id=${encodeURIComponent(c.id)}" class="fulltext-item-link">
+            <div class="fulltext-item-head">
+              <span class="fulltext-item-title">${escapeHtml(c.full_name || "Без имени")}</span>
+              ${relLabel ? `<span class="contact-badge contact-badge--${escapeHtml(c.relationship_type)}">${escapeHtml(relLabel)}</span>` : ""}
+              ${c.email ? `<span class="muted">${escapeHtml(c.email)}</span>` : ""}
+            </div>
+            ${c.snippet ? `<div class="fulltext-snippet">${renderSnippet(c.snippet)}</div>` : ""}
+          </a>
+        </li>
+      `);
+    }
+    parts.push(`</ul>`);
+  }
+
+  if (interactions.length) {
+    parts.push(`<h3 class="fulltext-section-title">Взаимодействия</h3>`);
+    parts.push(`<ul class="fulltext-list">`);
+    for (const i of interactions) {
+      parts.push(`
+        <li class="fulltext-item">
+          <a href="/contact.html?id=${encodeURIComponent(i.contact_id)}" class="fulltext-item-link">
+            <div class="fulltext-item-head">
+              <span class="fulltext-item-title">${escapeHtml(i.contact_full_name || "Без имени")}</span>
+              ${i.channel ? `<span class="muted">${escapeHtml(i.channel)}</span>` : ""}
+              <span class="muted">${escapeHtml(formatOccurredAt(i.occurred_at))}</span>
+            </div>
+            ${i.snippet ? `<div class="fulltext-snippet">${renderSnippet(i.snippet)}</div>` : ""}
+          </a>
+        </li>
+      `);
+    }
+    parts.push(`</ul>`);
+  }
+
+  el.innerHTML = parts.join("");
+}
+
+async function performFulltextSearch(query) {
+  const el = document.getElementById("fulltext-results");
+  if (!el) return;
+  const q = (query || "").trim();
+  if (!q) {
+    el.innerHTML = "";
+    return;
+  }
+
+  const token = getToken();
+  if (!token) {
+    window.location.href = "/login.html";
+    return;
+  }
+
+  el.innerHTML = `<p class="muted">Ищем…</p>`;
+  try {
+    const params = new URLSearchParams({ q, limit: "30" });
+    const response = await fetch(`/api/v1/search?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (response.status === 401) {
+      handleUnauthorized(response);
+      return;
+    }
+    if (!response.ok) {
+      el.innerHTML = `<p class="form-message">Ошибка поиска: ${response.status}</p>`;
+      return;
+    }
+    const data = await response.json();
+    renderFulltextResults(data);
+  } catch (e) {
+    el.innerHTML = `<p class="form-message">Ошибка сети при поиске.</p>`;
+  }
+}
+
 const fetchContacts = async () => {
   const token = getToken();
   if (!token) {
@@ -366,6 +482,8 @@ const fetchContacts = async () => {
   const params = new URLSearchParams({ page: 1, per_page: 50, sort: state.sort });
   if (state.searchQuery.trim()) params.set("q", state.searchQuery.trim());
   if (state.staleDays) params.set("last_contact_before", state.staleDays);
+  if (state.relationshipType) params.set("relationship_type", state.relationshipType);
+  if (state.birthdaySoon) params.set("has_birthday_soon", state.birthdaySoon);
 
   try {
     const response = await fetch(`/api/v1/contacts?${params}`, {
@@ -476,6 +594,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const relSelect = document.getElementById("contacts-relationship");
+  if (relSelect) {
+    relSelect.addEventListener("change", (event) => {
+      state.relationshipType = event.target.value || "";
+      fetchContacts();
+    });
+  }
+
+  const bdaySelect = document.getElementById("contacts-birthday");
+  if (bdaySelect) {
+    bdaySelect.addEventListener("change", (event) => {
+      state.birthdaySoon = event.target.value || "";
+      fetchContacts();
+    });
+  }
+
   const searchInput = document.getElementById("contacts-search");
   if (searchInput) {
     let searchDebounce = null;
@@ -483,6 +617,20 @@ document.addEventListener("DOMContentLoaded", () => {
       state.searchQuery = searchInput.value;
       clearTimeout(searchDebounce);
       searchDebounce = setTimeout(fetchContacts, 300);
+    });
+  }
+
+  const fulltextForm = document.getElementById("fulltext-form");
+  const fulltextQuery = document.getElementById("fulltext-query");
+  if (fulltextForm && fulltextQuery) {
+    fulltextForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      performFulltextSearch(fulltextQuery.value);
+    });
+    let ftDebounce = null;
+    fulltextQuery.addEventListener("input", () => {
+      clearTimeout(ftDebounce);
+      ftDebounce = setTimeout(() => performFulltextSearch(fulltextQuery.value), 400);
     });
   }
 

@@ -17,10 +17,14 @@ contacts_router = APIRouter(prefix="/api/v1/contacts", tags=["Contacts"])
 @contacts_router.get("", response_model=ContactCardListResponse, summary="Список контактов")
 async def list_contacts(page: int = Query(1, ge=1, description="Номер страницы"),
                         per_page: int = Query(20, ge=1, le=100, description="Размер страницы"),
-                        sort: str = Query("name", description="Сортировка: name|created_at"),
+                        sort: str = Query("name", description="Сортировка: name|created_at|last_contact_at"),
                         q: str | None = Query(None, description="Поиск по имени и email (ILIKE)"),
                         last_contact_before: int | None = Query(None, ge=1,
                                                                 description="Давно не общались: N дней без взаимодействий"),
+                        relationship_type: str | None = Query(None,
+                                                              description="Фильтр по типу отношений (colleague, friend, ...)"),
+                        has_birthday_soon: int | None = Query(None, ge=0, le=366,
+                                                              description="ДР в ближайшие N дней"),
                         current_user: CurrentUser = Depends(get_current_user),
                         session: AsyncSession = Depends(get_db_session)):
     items, total = await list_contacts_service(session=session,
@@ -29,7 +33,9 @@ async def list_contacts(page: int = Query(1, ge=1, description="Номер ст�
                                                per_page=per_page,
                                                sort=sort,
                                                q=q,
-                                               last_contact_before=last_contact_before)
+                                               last_contact_before=last_contact_before,
+                                               relationship_type=relationship_type,
+                                               has_birthday_soon=has_birthday_soon)
     return ContactCardListResponse(items=items, total=total, page=page, per_page=per_page)
 
 
