@@ -1,157 +1,139 @@
-import { setFooterYear, setMessage, initTheme, setupThemeToggle } from "./ui.js";
+import { setFooterYear, initTheme, setupThemeToggle, showToast } from "./ui.js";
+
+const FIELD_LABELS = {
+  password: "Пароль",
+  email: "Email",
+  username: "Имя пользователя",
+  first_name: "Имя",
+  last_name: "Фамилия",
+  tenant_name: "Название организации",
+};
+
+function parseErrorMessage(status, data, rawText) {
+  if (status === 422 && data && Array.isArray(data.detail)) {
+    return data.detail.map((err) => {
+      const field = err.loc?.[err.loc.length - 1] || "";
+      const label = FIELD_LABELS[field] || field;
+      const msg = err.msg || "ошибка";
+      if (err.type === "string_too_short") {
+        const min = err.ctx?.min_length;
+        return `${label}: слишком короткое${min ? ` (минимум ${min} символов)` : ""}`;
+      }
+      if (err.type === "missing") return `${label}: обязательное поле`;
+      if (err.type === "value_error") return `${label}: неверное значение`;
+      return `${label}: ${msg}`;
+    }).join(" · ");
+  }
+  if (data?.detail) {
+    return typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail);
+  }
+  return rawText || `Ошибка ${status}`;
+}
+
+function initTabs() {
+  const tabs = document.querySelectorAll(".auth-tab");
+  const panels = document.querySelectorAll(".auth-tab-panel");
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      tabs.forEach((t) => t.classList.remove("auth-tab--active"));
+      tab.classList.add("auth-tab--active");
+      const target = tab.dataset.tab;
+      panels.forEach((p) => { p.hidden = p.dataset.panel !== target; });
+    });
+  });
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
   setupThemeToggle();
   setFooterYear();
+  initTabs();
 
-  const form = document.getElementById("login-form");
-  if (!form) {
-    return;
-  }
-
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    setMessage("login-message", "Проверяем данные...");
-
-    const formData = new FormData(form);
-    const payload = {
-      username: String(formData.get("email") || ""),
-      password: String(formData.get("password") || ""),
-    };
-
-    try {
-      const response = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const rawText = await response.text();
-      if (!response.ok) {
-        let errorText = rawText;
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed.detail) {
-            errorText = parsed.detail;
-          }
-        } catch (parseError) {
-          // оставляем текст как есть, если это не JSON
-        }
-        setMessage(
-          "login-message",
-          `Ошибка (${response.status}): ${errorText || "Не удалось войти"}`
-        );
-        return;
-      }
-
-      let data = {};
+  const loginForm = document.getElementById("login-form");
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(loginForm);
+      const payload = {
+        username: String(fd.get("email") || ""),
+        password: String(fd.get("password") || ""),
+      };
       try {
-        data = rawText ? JSON.parse(rawText) : {};
-      } catch (parseError) {
-        // тело не JSON
+        const response = await fetch("/api/v1/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const rawText = await response.text();
+        let data = null;
+        try { data = rawText ? JSON.parse(rawText) : null; } catch (_) {}
+        if (!response.ok) {
+          showToast(parseErrorMessage(response.status, data, rawText));
+          return;
+        }
+        if (!data?.access_token) {
+          showToast("Токен не получен. Попробуйте ещё раз.");
+          return;
+        }
+        localStorage.setItem("access_token", data.access_token);
+        window.location.replace("/contacts.html");
+      } catch (_) {
+        showToast("Ошибка сети. Проверьте подключение.");
       }
-      if (!data.access_token) {
-        setMessage(
-          "login-message",
-          `Токен не получен. Ответ: ${rawText || "пустой"}`
-        );
-        return;
-      }
-      localStorage.setItem("access_token", data.access_token);
-      setMessage("login-message", "Успешный вход.");
-      // Редирект без токена в URL — токен уже в localStorage; так браузер не показывает длинный hash в адресной строке
-      window.location.replace("/contacts.html");
-    } catch (error) {
-      setMessage("login-message", "Ошибка сети. Попробуйте позже.");
-      window.location.href = "/error.html";
-    }
-  });
+    });
+  }
 
   const registerForm = document.getElementById("register-form");
-  if (!registerForm) {
-    return;
-  }
-
-  registerForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    setMessage("register-message", "Отправляем данные...");
-
-    const formData = new FormData(registerForm);
-    const payload = {
-      username: String(formData.get("username") || ""),
-      first_name: String(formData.get("first_name") || ""),
-      last_name: String(formData.get("last_name") || ""),
-      email: String(formData.get("email") || ""),
-      password: String(formData.get("password") || ""),
-      tenant_name: String(formData.get("tenant_name") || ""),
-    };
-
-    try {
-      const response = await fetch("/api/v1/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        setMessage(
-          "register-message",
-          `Ошибка (${response.status}): ${errorText || "Не удалось создать аккаунт"}`
-        );
-        return;
-      }
-
+  if (registerForm) {
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(registerForm);
+      const payload = {
+        username: String(fd.get("username") || ""),
+        first_name: String(fd.get("first_name") || ""),
+        last_name: String(fd.get("last_name") || ""),
+        email: String(fd.get("email") || ""),
+        password: String(fd.get("password") || ""),
+        tenant_name: String(fd.get("tenant_name") || ""),
+      };
       try {
-        await response.json();
-      } catch (parseError) {
-        // если тело пустое, продолжаем без падения
-      }
-      setMessage("register-message", "Аккаунт создан. Выполняем вход...");
-
-      const loginResponse = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: payload.email,
-          password: payload.password,
-        }),
-      });
-
-      if (loginResponse.ok) {
-        try {
-          const loginData = await loginResponse.json();
-          if (loginData.access_token) {
-            localStorage.setItem("access_token", loginData.access_token);
-          }
-        } catch (parseError) {
-          // игнорируем ошибки парсинга токена
+        const response = await fetch("/api/v1/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          const rawText = await response.text();
+          let data = null;
+          try { data = rawText ? JSON.parse(rawText) : null; } catch (_) {}
+          showToast(parseErrorMessage(response.status, data, rawText));
+          return;
         }
-      } else {
-        const loginErrorText = await loginResponse.text();
-        setMessage(
-          "register-message",
-          `Аккаунт создан, но вход не удался (${loginResponse.status}): ${loginErrorText || "нет ответа"}`
-        );
-        return;
-      }
+        try { await response.json(); } catch (_) {}
 
-      if (!localStorage.getItem("access_token")) {
-        setMessage("register-message", "Аккаунт создан, но вход не удался. Попробуйте войти вручную.");
-        return;
+        const loginResp = await fetch("/api/v1/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: payload.email, password: payload.password }),
+        });
+        if (loginResp.ok) {
+          try {
+            const loginData = await loginResp.json();
+            if (loginData.access_token) localStorage.setItem("access_token", loginData.access_token);
+          } catch (_) {}
+        } else {
+          showToast("Аккаунт создан, но войти не удалось. Войдите вручную.", "info");
+          return;
+        }
+        if (!localStorage.getItem("access_token")) {
+          showToast("Аккаунт создан. Войдите вручную.", "info");
+          return;
+        }
+        registerForm.reset();
+        window.location.href = "/contacts.html";
+      } catch (_) {
+        showToast("Ошибка сети. Проверьте подключение.");
       }
-
-      registerForm.reset();
-      window.location.href = "/contacts.html";
-    } catch (error) {
-      setMessage("register-message", "Ошибка сети. Попробуйте позже.");
-    }
-  });
+    });
+  }
 });

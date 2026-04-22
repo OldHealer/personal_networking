@@ -103,6 +103,16 @@
                 <option value="created_at">По дате создания</option>
               </select>
             </label>
+            <label class="field field-inline">
+              <span>Давно не общались</span>
+              <select id="contacts-stale">
+                <option value="">—</option>
+                <option value="7">более 7 дней</option>
+                <option value="30">более 30 дней</option>
+                <option value="90">более 90 дней</option>
+                <option value="180">более 180 дней</option>
+              </select>
+            </label>
           </div>
           <div id="contacts-empty" class="muted">Пока нет контактов.</div>
           <div id="contacts-grid" class="grid"></div>

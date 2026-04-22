@@ -29,7 +29,7 @@ function formatRelativeTime(dateStr) {
 const state = {
   sort: "name",
   searchQuery: "",
-  allItems: [],
+  staleDays: "",
 };
 
 const tokenKey = "access_token";
@@ -50,16 +50,6 @@ function applyTokenFromHash() {
 
 const getToken = () => localStorage.getItem(tokenKey);
 
-function filterContactsBySearch(items, query) {
-  const q = (query || "").trim().toLowerCase();
-  if (!q) return items;
-  return items.filter((item) => {
-    const name = (item.full_name || "").toLowerCase();
-    const words = q.split(/\s+/).filter(Boolean);
-    return words.every((w) => name.includes(w));
-  });
-}
-
 const renderContacts = (items) => {
   const grid = document.getElementById("contacts-grid");
   const empty = document.getElementById("contacts-empty");
@@ -67,17 +57,21 @@ const renderContacts = (items) => {
     return;
   }
 
-  const filtered = filterContactsBySearch(items, state.searchQuery);
-
   grid.innerHTML = "";
-  if (!filtered.length) {
+  if (!items.length) {
     empty.style.display = "block";
-    empty.textContent = state.searchQuery.trim() ? "Ничего не найдено по запросу." : "Пока нет контактов.";
+    if (state.searchQuery.trim()) {
+      empty.textContent = "Ничего не найдено по запросу.";
+    } else if (state.staleDays) {
+      empty.textContent = `Нет контактов, с которыми не общались более ${state.staleDays} дней.`;
+    } else {
+      empty.textContent = "Пока нет контактов.";
+    }
     return;
   }
 
   empty.style.display = "none";
-  filtered.forEach((item) => {
+  items.forEach((item) => {
     const card = document.createElement("a");
     card.className = "card contact-card contact-card-link";
     card.href = `/contact.html?id=${item.id}`;
@@ -369,15 +363,14 @@ const fetchContacts = async () => {
     return;
   }
 
+  const params = new URLSearchParams({ page: 1, per_page: 50, sort: state.sort });
+  if (state.searchQuery.trim()) params.set("q", state.searchQuery.trim());
+  if (state.staleDays) params.set("last_contact_before", state.staleDays);
+
   try {
-    const response = await fetch(
-      `/api/v1/contacts?page=1&per_page=50&sort=${state.sort}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await fetch(`/api/v1/contacts?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
     if (response.status === 401) {
       handleUnauthorized(response);
@@ -390,8 +383,7 @@ const fetchContacts = async () => {
     }
 
     const data = await response.json();
-    state.allItems = data.items || [];
-    renderContacts(state.allItems);
+    renderContacts(data.items || []);
   } catch (error) {
     setMessage("contact-message", "Ошибка сети при загрузке контактов.");
   }
@@ -476,11 +468,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const staleSelect = document.getElementById("contacts-stale");
+  if (staleSelect) {
+    staleSelect.addEventListener("change", (event) => {
+      state.staleDays = event.target.value || "";
+      fetchContacts();
+    });
+  }
+
   const searchInput = document.getElementById("contacts-search");
   if (searchInput) {
+    let searchDebounce = null;
     searchInput.addEventListener("input", () => {
       state.searchQuery = searchInput.value;
-      renderContacts(state.allItems);
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(fetchContacts, 300);
     });
   }
 

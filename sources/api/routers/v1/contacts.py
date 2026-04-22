@@ -18,13 +18,18 @@ contacts_router = APIRouter(prefix="/api/v1/contacts", tags=["Contacts"])
 async def list_contacts(page: int = Query(1, ge=1, description="Номер страницы"),
                         per_page: int = Query(20, ge=1, le=100, description="Размер страницы"),
                         sort: str = Query("name", description="Сортировка: name|created_at"),
+                        q: str | None = Query(None, description="Поиск по имени и email (ILIKE)"),
+                        last_contact_before: int | None = Query(None, ge=1,
+                                                                description="Давно не общались: N дней без взаимодействий"),
                         current_user: CurrentUser = Depends(get_current_user),
                         session: AsyncSession = Depends(get_db_session)):
     items, total = await list_contacts_service(session=session,
                                                tenant_id=current_user.db_user.tenant_id,
                                                page=page,
                                                per_page=per_page,
-                                               sort=sort)
+                                               sort=sort,
+                                               q=q,
+                                               last_contact_before=last_contact_before)
     return ContactCardListResponse(items=items, total=total, page=page, per_page=per_page)
 
 

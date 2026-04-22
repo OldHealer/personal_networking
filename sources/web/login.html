@@ -18,62 +18,71 @@
         </a>
         <nav class="nav">
           <a class="nav-link" href="index.html">Главная</a>
-          <a class="nav-link is-active" href="login.html">Вход</a>
           <button id="theme-toggle" class="theme-toggle" aria-label="Тёмная тема"><span class="theme-icon">🌙</span></button>
         </nav>
       </div>
     </header>
 
     <main class="auth-page">
-      <section class="auth-card">
-        <h1>Вход в аккаунт</h1>
-        <p class="muted">Введите email и пароль для доступа к картотеке.</p>
-        <form id="login-form" class="form">
-          <label class="field">
-            <span>Email</span>
-            <input type="email" name="email" placeholder="you@example.com" required />
-          </label>
-          <label class="field">
-            <span>Пароль</span>
-            <input type="password" name="password" placeholder="********" required />
-          </label>
-          <button class="button" type="submit">Войти</button>
-          <p id="login-message" class="form-message"></p>
-        </form>
+      <div class="auth-card">
+        <div class="auth-brand">
+          <img src="/assets/img/favicon.svg" alt="" width="40" height="40" />
+          <span>Rockfile</span>
+        </div>
 
-        <div class="divider"></div>
+        <div class="auth-tabs">
+          <button class="auth-tab auth-tab--active" data-tab="login">Вход</button>
+          <button class="auth-tab" data-tab="register">Регистрация</button>
+        </div>
 
-        <h2>Регистрация</h2>
-        <p class="muted">Создайте аккаунт, чтобы начать вести картотеку.</p>
-        <form id="register-form" class="form">
-          <label class="field">
-            <span>Имя пользователя</span>
-            <input type="text" name="username" placeholder="ivan" required />
-          </label>
-          <label class="field">
-            <span>Имя</span>
-            <input type="text" name="first_name" placeholder="Ivan" />
-          </label>
-          <label class="field">
-            <span>Фамилия</span>
-            <input type="text" name="last_name" placeholder="Ivanov" />
-          </label>
-          <label class="field">
-            <span>Email</span>
-            <input type="email" name="email" placeholder="ivan@example.com" required />
-          </label>
-          <label class="field">
-            <span>Пароль</span>
-            <input type="password" name="password" placeholder="********" required />
-          </label>
-          <label class="field">
-            <span>Название tenant</span>
-            <input type="text" name="tenant_name" placeholder="Ivan Corp" />
-          </label>
-          <button class="button" type="submit">Создать аккаунт</button>
-          <p id="register-message" class="form-message"></p>
-        </form>
-      </section>
+        <div class="auth-tab-panel" data-panel="login">
+          <p class="auth-desc muted">Войдите, чтобы открыть свою картотеку.</p>
+          <form id="login-form" class="form auth-form">
+            <label class="field">
+              <span>Email</span>
+              <input type="email" name="email" placeholder="you@example.com" required autocomplete="email" />
+            </label>
+            <label class="field">
+              <span>Пароль</span>
+              <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password" />
+            </label>
+            <button class="button auth-submit" type="submit">Войти</button>
+          </form>
+        </div>
+
+        <div class="auth-tab-panel" data-panel="register" hidden>
+          <p class="auth-desc muted">Создайте аккаунт, чтобы начать вести картотеку.</p>
+          <form id="register-form" class="form auth-form">
+            <div class="auth-form-row">
+              <label class="field">
+                <span>Имя</span>
+                <input type="text" name="first_name" placeholder="Иван" autocomplete="given-name" />
+              </label>
+              <label class="field">
+                <span>Фамилия</span>
+                <input type="text" name="last_name" placeholder="Иванов" autocomplete="family-name" />
+              </label>
+            </div>
+            <label class="field">
+              <span>Email</span>
+              <input type="email" name="email" placeholder="ivan@example.com" required autocomplete="email" />
+            </label>
+            <label class="field">
+              <span>Имя пользователя</span>
+              <input type="text" name="username" placeholder="ivan" required autocomplete="username" />
+            </label>
+            <label class="field">
+              <span>Пароль</span>
+              <input type="password" name="password" placeholder="••••••••" required autocomplete="new-password" />
+            </label>
+            <label class="field">
+              <span>Организация <span class="field-hint">(необязательно)</span></span>
+              <input type="text" name="tenant_name" placeholder="Ivan Corp" autocomplete="organization" />
+            </label>
+            <button class="button auth-submit" type="submit">Создать аккаунт</button>
+          </form>
+        </div>
+      </div>
     </main>
 
     <footer class="site-footer">
@@ -83,11 +92,11 @@
           <span class="footer-sep"> · </span>
           <span class="footer-about">Private project.</span>
           <span class="footer-sep"> · </span>
-          <span class="footer-contact">Если есть вопросы или предложения, напишите мне в <a href="https://t.me/old_healer">Telegram</a>.</span>
+          <span class="footer-contact">Если есть вопросы, напишите в <a href="https://t.me/old_healer">Telegram</a>.</span>
         </p>
       </div>
     </footer>
 
-    <script type="module" src="/assets/js/auth.js?v=1"></script>
+    <script type="module" src="/assets/js/auth.js?v=2"></script>
   </body>
 </html>
