@@ -8,7 +8,8 @@ from api.schemas.contacts import (ContactCardCreate, ContactCardListResponse, Co
 from api.services.contacts_service import (create_contact as create_contact_service,
                                            delete_contact as delete_contact_service,
                                            get_contact as get_contact_service, list_contacts as list_contacts_service,
-                                           update_contact as update_contact_service, )
+                                           update_contact as update_contact_service,
+                                           get_stats as get_stats_service, )
 
 logger = get_logger()
 contacts_router = APIRouter(prefix="/api/v1/contacts", tags=["Contacts"])
@@ -37,6 +38,12 @@ async def list_contacts(page: int = Query(1, ge=1, description="Номер ст�
                                                relationship_type=relationship_type,
                                                has_birthday_soon=has_birthday_soon)
     return ContactCardListResponse(items=items, total=total, page=page, per_page=per_page)
+
+
+@contacts_router.get("/stats", summary="Статистика контактов")
+async def get_stats(current_user: CurrentUser = Depends(get_current_user),
+                    session: AsyncSession = Depends(get_db_session)):
+    return await get_stats_service(session=session, tenant_id=current_user.db_user.tenant_id)
 
 
 @contacts_router.post("", response_model=ContactCardResponse, summary="Создать контакт")

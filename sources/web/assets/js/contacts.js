@@ -507,6 +507,156 @@ const fetchContacts = async () => {
   }
 };
 
+// --- Сайдбар: статистика, дни рождения, давно не общались ---
+
+const RELATIONSHIP_LABELS_STATS = {
+  business: "Деловые", colleague: "Коллеги", client: "Клиенты",
+  partner: "Партнёры", mentor: "Наставники", mentee: "Подопечные",
+  personal: "Личные", friend: "Друзья", acquaintance: "Знакомые",
+  family: "Семья", other: "Другие",
+};
+
+function renderSidebarStats(data) {
+  const el = document.getElementById("sidebar-stats");
+  if (!el) return;
+  const total = data.total || 0;
+  const byType = data.by_type || {};
+
+  const sorted = Object.entries(byType)
+    .filter(([, cnt]) => cnt > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  const rows = sorted.map(([type, cnt]) => {
+    const label = RELATIONSHIP_LABELS_STATS[type] || type;
+    const pct = total ? Math.round((cnt / total) * 100) : 0;
+    return `<div class="stats-row">
+      <span class="stats-label">${escapeHtml(label)}</span>
+      <span class="stats-bar-wrap"><span class="stats-bar" style="width:${pct}%"></span></span>
+      <span class="stats-count">${cnt}</span>
+    </div>`;
+  }).join("");
+
+  el.innerHTML = `
+    <div class="stats-total">Всего: <strong>${total}</strong></div>
+    <div class="stats-list">${rows}</div>`;
+}
+
+async function fetchStats() {
+  const token = getToken();
+  if (!token) return;
+  try {
+    const res = await fetch("/api/v1/contacts/stats", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      renderSidebarStats(await res.json());
+    } else {
+      const el = document.getElementById("sidebar-stats");
+      if (el) el.innerHTML = "";
+    }
+  } catch (_) {
+    const el = document.getElementById("sidebar-stats");
+    if (el) el.innerHTML = "";
+  }
+}
+
+function daysUntilBirthday(birthdayStr) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const bday = new Date(birthdayStr + "T00:00:00");
+  const next = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
+  if (next < today) next.setFullYear(today.getFullYear() + 1);
+  return Math.round((next - today) / 86400000);
+}
+
+function formatBirthdayDate(birthdayStr) {
+  const d = new Date(birthdayStr + "T00:00:00");
+  return d.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+}
+
+function renderSidebarBirthdays(items) {
+  const el = document.getElementById("sidebar-birthdays");
+  if (!el) return;
+  if (!items.length) {
+    el.innerHTML = `<p class="muted sidebar-empty">Нет дней рождения в ближайшие 90 дней</p>`;
+    return;
+  }
+  el.innerHTML = items.map((c) => {
+    const days = daysUntilBirthday(c.birthday);
+    const dateStr = formatBirthdayDate(c.birthday);
+    const daysLabel = days === 0 ? "сегодня" : days === 1 ? "завтра" : `через ${days} дн.`;
+    return `<a href="/contact.html?id=${encodeURIComponent(c.id)}" class="sidebar-contact-item">
+      <span class="sidebar-contact-name">${escapeHtml(c.full_name || "Без имени")}</span>
+      <span class="sidebar-contact-meta">${dateStr} — ${daysLabel}</span>
+    </a>`;
+  }).join("");
+}
+
+function renderSidebarStale(items) {
+  const el = document.getElementById("sidebar-stale");
+  if (!el) return;
+  if (!items.length) {
+    el.innerHTML = `<p class="muted sidebar-empty">Все контакты в порядке</p>`;
+    return;
+  }
+  el.innerHTML = items.map((c) => {
+    const meta = c.last_interaction_at
+      ? `${formatRelativeTime(c.last_interaction_at)}`
+      : "не общались никогда";
+    return `<a href="/contact.html?id=${encodeURIComponent(c.id)}" class="sidebar-contact-item">
+      <span class="sidebar-contact-name">${escapeHtml(c.full_name || "Без имени")}</span>
+      <span class="sidebar-contact-meta">${meta}</span>
+    </a>`;
+  }).join("");
+}
+
+async function fetchSidebar() {
+  const token = getToken();
+  if (!token) return;
+
+  try {
+    const res = await fetch("/api/v1/contacts?has_birthday_soon=90&per_page=20&sort=name", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const sorted = (data.items || [])
+        .filter((c) => c.birthday)
+        .map((c) => ({ ...c, _days: daysUntilBirthday(c.birthday) }))
+        .sort((a, b) => a._days - b._days)
+        .slice(0, 3);
+      renderSidebarBirthdays(sorted);
+    } else {
+      const el = document.getElementById("sidebar-birthdays");
+      if (el) el.innerHTML = "";
+    }
+  } catch (_) {
+    const el = document.getElementById("sidebar-birthdays");
+    if (el) el.innerHTML = "";
+  }
+
+  try {
+    const res = await fetch("/api/v1/contacts?last_contact_before=45&per_page=50&sort=name", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const items = data.items || [];
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+      renderSidebarStale(items.slice(0, 3));
+    } else {
+      const el = document.getElementById("sidebar-stale");
+      if (el) el.innerHTML = "";
+    }
+  } catch (_) {
+    const el = document.getElementById("sidebar-stale");
+    if (el) el.innerHTML = "";
+  }
+}
+
 const handleCreate = async (event) => {
   event.preventDefault();
   const token = getToken();
@@ -634,5 +784,37 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Переключатель режимов поиска
+  document.querySelectorAll(".search-mode-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.mode;
+      document.querySelectorAll(".search-mode-btn").forEach((b) => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+
+      const namePanel = document.getElementById("search-mode-name");
+      const fulltextPanel = document.getElementById("search-mode-fulltext");
+
+      if (mode === "name") {
+        namePanel.hidden = false;
+        fulltextPanel.hidden = true;
+        // Сбрасываем fulltext-результаты
+        const results = document.getElementById("fulltext-results");
+        if (results) results.innerHTML = "";
+        if (fulltextQuery) fulltextQuery.value = "";
+        if (searchInput) searchInput.focus();
+      } else {
+        namePanel.hidden = true;
+        fulltextPanel.hidden = false;
+        // Сбрасываем фильтр по имени
+        if (searchInput) searchInput.value = "";
+        state.searchQuery = "";
+        fetchContacts();
+        if (fulltextQuery) fulltextQuery.focus();
+      }
+    });
+  });
+
   fetchContacts();
+  fetchSidebar();
+  fetchStats();
 });

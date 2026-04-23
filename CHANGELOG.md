@@ -7,6 +7,18 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- Sidebar on contacts page: upcoming birthdays (top 3, sorted by days remaining), stale contacts (45+ days, random order), and contact stats widget
+- Stats endpoint `GET /api/v1/contacts/stats` — GROUP BY relationship_type, returns total + breakdown
+- Two-mode search card: "По имени" (real-time filter) and "По содержимому" (full-text), with segmented switcher; removed duplicate search from list header
+- Unique badge color per relationship type (11 types, light + dark theme)
+- Right sidebar layout on contacts page (1fr + 260px grid, sticky, hidden on <1024px)
+- Container width increased from 1100px to 1400px
+- Quick-add contact form made compact (inline flex row, matches AI agent card style)
+- Uniform button height on contact detail page (matching "Редактировать" size)
+- Amber button color theme (#b08040), card hover border matches button color
+- Filter row changed from flex to CSS grid (4 equal columns) to match contact card grid width
+
+### Changed
 - Full-text search endpoint `GET /api/v1/search?q=` — tsvector (`russian`) + GIN indexes across `contact_cards` (name, address, ambitions, hobbies, interests, goals) and `contact_interactions` (notes, promises, mentions). Returns ranked hits with `ts_headline` snippets highlighted via `<mark>`. Supports `websearch_to_tsquery` syntax (quotes, OR). Tenant-isolated.
 - UI: "Глубокий поиск" card on contacts page — debounced input hits `/api/v1/search`, renders separate lists of matched contacts and interactions with highlighted snippets; each hit links to the contact page.
 - Generated tsvector columns `search_tsv` + GIN indexes created via idempotent bootstrap on app startup (`utils/search_bootstrap.py`) — normalizes JSON fields through `jsonb::text` to avoid `\uXXXX` tokenization of Cyrillic.

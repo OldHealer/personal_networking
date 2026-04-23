@@ -35,134 +35,163 @@
         </div>
         <p id="auth-error" class="form-message" role="alert" style="display: none;"></p>
 
-        <section class="card form-card add-contact-compact">
-          <h2>Быстрое добавление контакта</h2>
-          <form id="contact-form" class="form form-inline-compact">
-            <label class="field">
-              <span>Полное имя</span>
-              <input type="text" name="full_name" placeholder="Иван Иванов" required />
-            </label>
-            <label class="field">
-              <span>Телефон</span>
-              <input type="text" name="phone" placeholder="+7 900 000-00-00" />
-            </label>
-            <label class="field">
-              <span>Email</span>
-              <input type="email" name="email" placeholder="ivan@example.com" />
-            </label>
-            <p id="contact-message" class="form-message"></p>
-            <button class="button" type="submit">Сохранить</button>
-          </form>
-        </section>
+        <div class="contacts-page-layout">
+          <div class="contacts-main">
+            <section class="card form-card add-contact-compact">
+              <h2>Быстрое добавление контакта</h2>
+              <form id="contact-form" class="form form-inline-compact">
+                <label class="field">
+                  <span>Полное имя</span>
+                  <input type="text" name="full_name" placeholder="Иван Иванов" required />
+                </label>
+                <label class="field">
+                  <span>Телефон</span>
+                  <input type="text" name="phone" placeholder="+7 900 000-00-00" />
+                </label>
+                <label class="field">
+                  <span>Email</span>
+                  <input type="email" name="email" placeholder="ivan@example.com" />
+                </label>
+                <p id="contact-message" class="form-message"></p>
+                <button class="button" type="submit">Сохранить</button>
+              </form>
+            </section>
 
-        <section class="card form-card">
-          <h2>Подготовка к встрече (AI‑агент)</h2>
-          <form id="prepare-meeting-form" class="form form-inline-compact">
-            <label class="field">
-              <span>Контакт</span>
-              <div class="contact-autocomplete">
-                <input
-                  type="search"
-                  id="prepare-meeting-query"
-                  placeholder="Начните вводить имя или email…"
-                  autocomplete="off"
-                  aria-autocomplete="list"
-                  aria-expanded="false"
-                  aria-controls="prepare-meeting-suggestions"
-                />
-                <input type="hidden" id="prepare-meeting-contact-id" />
-                <ul
-                  id="prepare-meeting-suggestions"
-                  class="contact-suggestions"
-                  role="listbox"
-                  aria-hidden="true"
-                ></ul>
+            <section class="card form-card">
+              <h2>Подготовка к встрече (AI‑агент)</h2>
+              <form id="prepare-meeting-form" class="form form-inline-compact">
+                <label class="field">
+                  <span>Контакт</span>
+                  <div class="contact-autocomplete">
+                    <input
+                      type="search"
+                      id="prepare-meeting-query"
+                      placeholder="Начните вводить имя или email…"
+                      autocomplete="off"
+                      aria-autocomplete="list"
+                      aria-expanded="false"
+                      aria-controls="prepare-meeting-suggestions"
+                    />
+                    <input type="hidden" id="prepare-meeting-contact-id" />
+                    <ul
+                      id="prepare-meeting-suggestions"
+                      class="contact-suggestions"
+                      role="listbox"
+                      aria-hidden="true"
+                    ></ul>
+                  </div>
+                </label>
+                <div class="form-card-actions">
+                  <p id="prepare-meeting-message" class="form-message section-message"></p>
+                  <button id="prepare-meeting-button" class="button" type="button">
+                    Подготовь меня к встрече
+                  </button>
+                </div>
+              </form>
+              <div id="prepare-meeting-result" class="meeting-agent-result muted" style="white-space: pre-wrap;"></div>
+            </section>
+
+            <section class="card form-card">
+              <h2>Поиск</h2>
+              <div class="search-mode-switcher">
+                <button class="search-mode-btn is-active" data-mode="name" type="button">По имени</button>
+                <button class="search-mode-btn" data-mode="fulltext" type="button">По содержимому</button>
               </div>
-            </label>
-            <div class="form-card-actions">
-              <p id="prepare-meeting-message" class="form-message section-message"></p>
-              <button id="prepare-meeting-button" class="button" type="button">
-                Подготовь меня к встрече
-              </button>
+
+              <div id="search-mode-name" class="search-mode-panel">
+                <form class="form" id="name-search-form" autocomplete="off">
+                  <label class="field">
+                    <span class="visually-hidden">Поиск по имени</span>
+                    <input type="search" id="contacts-search" placeholder="Иванов, Мария…" autocomplete="off" />
+                  </label>
+                </form>
+              </div>
+
+              <div id="search-mode-fulltext" class="search-mode-panel" hidden>
+                <p class="muted search-mode-hint">По заметкам, обещаниям, интересам, целям и амбициям — во всех карточках и взаимодействиях.</p>
+                <form id="fulltext-form" class="form form-inline-compact" autocomplete="off">
+                  <label class="field">
+                    <span class="visually-hidden">Запрос</span>
+                    <input type="search" id="fulltext-query"
+                           placeholder='Например: «Лиссабон», «python OR rust», «"мой проект"»' />
+                  </label>
+                  <button class="button" type="submit">Найти</button>
+                </form>
+                <div id="fulltext-results" class="fulltext-results"></div>
+              </div>
+            </section>
+
+            <section class="contacts-list">
+              <div class="list-header">
+                <h2>Все контакты</h2>
+              </div>
+              <div class="list-filters">
+                <label class="field field-inline">
+                  <span>Сортировка</span>
+                  <select id="contacts-sort">
+                    <option value="name">По имени</option>
+                    <option value="created_at">По дате создания</option>
+                    <option value="last_contact_at">По дате последней встречи</option>
+                  </select>
+                </label>
+                <label class="field field-inline">
+                  <span>Тип отношений</span>
+                  <select id="contacts-relationship">
+                    <option value="">Все</option>
+                    <option value="business">Деловой</option>
+                    <option value="colleague">Коллега</option>
+                    <option value="client">Клиент</option>
+                    <option value="partner">Партнёр</option>
+                    <option value="mentor">Наставник</option>
+                    <option value="mentee">Подопечный</option>
+                    <option value="personal">Личный</option>
+                    <option value="friend">Друг</option>
+                    <option value="acquaintance">Знакомый</option>
+                    <option value="family">Семья</option>
+                    <option value="other">Другое</option>
+                  </select>
+                </label>
+                <label class="field field-inline">
+                  <span>Давно не общались</span>
+                  <select id="contacts-stale">
+                    <option value="">—</option>
+                    <option value="7">более 7 дней</option>
+                    <option value="30">более 30 дней</option>
+                    <option value="90">более 90 дней</option>
+                    <option value="180">более 180 дней</option>
+                  </select>
+                </label>
+                <label class="field field-inline">
+                  <span>Дни рождения</span>
+                  <select id="contacts-birthday">
+                    <option value="">—</option>
+                    <option value="7">в ближайшие 7 дней</option>
+                    <option value="14">в ближайшие 14 дней</option>
+                    <option value="30">в ближайшие 30 дней</option>
+                    <option value="90">в ближайшие 90 дней</option>
+                  </select>
+                </label>
+              </div>
+              <div id="contacts-empty" class="muted">Пока нет контактов.</div>
+              <div id="contacts-grid" class="grid"></div>
+            </section>
+          </div>
+
+          <aside class="contacts-sidebar">
+            <div class="card sidebar-widget">
+              <h3 class="sidebar-widget-title">Статистика</h3>
+              <div id="sidebar-stats"><p class="muted sidebar-empty">Загрузка…</p></div>
             </div>
-          </form>
-          <div id="prepare-meeting-result" class="meeting-agent-result muted" style="white-space: pre-wrap;"></div>
-        </section>
-
-        <section class="card form-card">
-          <h2>Глубокий поиск</h2>
-          <p class="muted" style="margin-top:-0.25rem">
-            По заметкам, обещаниям, интересам, целям и амбициям — во всех карточках и взаимодействиях.
-          </p>
-          <form id="fulltext-form" class="form form-inline-compact" autocomplete="off">
-            <label class="field" style="flex:1 1 320px">
-              <span class="visually-hidden">Запрос</span>
-              <input type="search" id="fulltext-query"
-                     placeholder='Например: «Лиссабон», «python OR rust», «"мой проект"»' />
-            </label>
-            <button class="button" type="submit">Найти</button>
-          </form>
-          <div id="fulltext-results" class="fulltext-results"></div>
-        </section>
-
-        <section class="contacts-list">
-          <div class="list-header">
-            <h2>Все контакты</h2>
-            <label class="field field-inline contacts-search-wrap list-header-search">
-              <span class="visually-hidden">Поиск</span>
-              <input type="search" id="contacts-search" placeholder="Поиск по имени или фамилии…" autocomplete="off" />
-            </label>
-          </div>
-          <div class="list-filters">
-            <label class="field field-inline">
-              <span>Сортировка</span>
-              <select id="contacts-sort">
-                <option value="name">По имени</option>
-                <option value="created_at">По дате создания</option>
-                <option value="last_contact_at">По дате последней встречи</option>
-              </select>
-            </label>
-            <label class="field field-inline">
-              <span>Тип отношений</span>
-              <select id="contacts-relationship">
-                <option value="">Все</option>
-                <option value="business">Деловой</option>
-                <option value="colleague">Коллега</option>
-                <option value="client">Клиент</option>
-                <option value="partner">Партнёр</option>
-                <option value="mentor">Наставник</option>
-                <option value="mentee">Подопечный</option>
-                <option value="personal">Личный</option>
-                <option value="friend">Друг</option>
-                <option value="acquaintance">Знакомый</option>
-                <option value="family">Семья</option>
-                <option value="other">Другое</option>
-              </select>
-            </label>
-            <label class="field field-inline">
-              <span>Давно не общались</span>
-              <select id="contacts-stale">
-                <option value="">—</option>
-                <option value="7">более 7 дней</option>
-                <option value="30">более 30 дней</option>
-                <option value="90">более 90 дней</option>
-                <option value="180">более 180 дней</option>
-              </select>
-            </label>
-            <label class="field field-inline">
-              <span>Дни рождения</span>
-              <select id="contacts-birthday">
-                <option value="">—</option>
-                <option value="7">в ближайшие 7 дней</option>
-                <option value="14">в ближайшие 14 дней</option>
-                <option value="30">в ближайшие 30 дней</option>
-                <option value="90">в ближайшие 90 дней</option>
-              </select>
-            </label>
-          </div>
-          <div id="contacts-empty" class="muted">Пока нет контактов.</div>
-          <div id="contacts-grid" class="grid"></div>
-        </section>
+            <div class="card sidebar-widget">
+              <h3 class="sidebar-widget-title">Ближайшие дни рождения</h3>
+              <div id="sidebar-birthdays"><p class="muted sidebar-empty">Загрузка…</p></div>
+            </div>
+            <div class="card sidebar-widget">
+              <h3 class="sidebar-widget-title">Давно не общались</h3>
+              <div id="sidebar-stale"><p class="muted sidebar-empty">Загрузка…</p></div>
+            </div>
+          </aside>
+        </div>
       </div>
     </main>
 

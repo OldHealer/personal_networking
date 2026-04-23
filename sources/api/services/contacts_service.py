@@ -155,6 +155,20 @@ class ContactService:
         logger.info(f"Deleted contact {contact.full_name}|{contact_id}")
         return None
 
+    async def get_stats(self, session: AsyncSession, tenant_id) -> dict:
+        """Статистика: всего контактов + разбивка по типу отношений."""
+        stmt = _apply_tenant_filter(
+            select(
+                ContactCard.relationship_type,
+                func.count(ContactCard.id).label("cnt"),
+            ).group_by(ContactCard.relationship_type),
+            tenant_id,
+        )
+        rows = (await session.execute(stmt)).all()
+        by_type = {(r.relationship_type or "other"): r.cnt for r in rows}
+        total = sum(by_type.values())
+        return {"total": total, "by_type": by_type}
+
 
 # Единственный экземпляр сервиса для приложения (удобно подменять в тестах)
 contact_service = ContactService(contacts_dao)
@@ -184,3 +198,7 @@ async def update_contact(session, contact_id: str, payload: ContactCardUpdate):
 
 async def delete_contact(session, contact_id: str):
     return await contact_service.delete_contact(session=session, contact_id=contact_id)
+
+
+async def get_stats(session, tenant_id) -> dict:
+    return await contact_service.get_stats(session=session, tenant_id=tenant_id)
