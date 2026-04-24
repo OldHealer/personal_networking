@@ -613,12 +613,12 @@ function renderSidebarStale(items) {
 async function fetchSidebar() {
   const token = getToken();
   if (!token) return;
+  const headers = { Authorization: `Bearer ${token}` };
 
-  try {
-    const res = await fetch("/api/v1/contacts?has_birthday_soon=90&per_page=20&sort=name", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) {
+  const birthdaysTask = (async () => {
+    try {
+      const res = await fetch("/api/v1/contacts?has_birthday_soon=90&per_page=20&sort=name", { headers });
+      if (!res.ok) throw new Error("birthdays fetch failed");
       const data = await res.json();
       const sorted = (data.items || [])
         .filter((c) => c.birthday)
@@ -626,20 +626,16 @@ async function fetchSidebar() {
         .sort((a, b) => a._days - b._days)
         .slice(0, 3);
       renderSidebarBirthdays(sorted);
-    } else {
+    } catch (_) {
       const el = document.getElementById("sidebar-birthdays");
-      if (el) el.innerHTML = "";
+      if (el) el.innerHTML = `<p class="muted sidebar-empty">Не удалось загрузить</p>`;
     }
-  } catch (_) {
-    const el = document.getElementById("sidebar-birthdays");
-    if (el) el.innerHTML = "";
-  }
+  })();
 
-  try {
-    const res = await fetch("/api/v1/contacts?last_contact_before=45&per_page=50&sort=name", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) {
+  const staleTask = (async () => {
+    try {
+      const res = await fetch("/api/v1/contacts?last_contact_before=45&per_page=15&sort=name", { headers });
+      if (!res.ok) throw new Error("stale fetch failed");
       const data = await res.json();
       const items = data.items || [];
       for (let i = items.length - 1; i > 0; i--) {
@@ -647,14 +643,13 @@ async function fetchSidebar() {
         [items[i], items[j]] = [items[j], items[i]];
       }
       renderSidebarStale(items.slice(0, 3));
-    } else {
+    } catch (_) {
       const el = document.getElementById("sidebar-stale");
-      if (el) el.innerHTML = "";
+      if (el) el.innerHTML = `<p class="muted sidebar-empty">Не удалось загрузить</p>`;
     }
-  } catch (_) {
-    const el = document.getElementById("sidebar-stale");
-    if (el) el.innerHTML = "";
-  }
+  })();
+
+  await Promise.all([birthdaysTask, staleTask]);
 }
 
 const handleCreate = async (event) => {
@@ -788,8 +783,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".search-mode-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const mode = btn.dataset.mode;
-      document.querySelectorAll(".search-mode-btn").forEach((b) => b.classList.remove("is-active"));
-      btn.classList.add("is-active");
+      document.querySelectorAll(".search-mode-btn").forEach((b) => {
+        const active = b === btn;
+        b.classList.toggle("is-active", active);
+        b.setAttribute("aria-selected", active ? "true" : "false");
+      });
 
       const namePanel = document.getElementById("search-mode-name");
       const fulltextPanel = document.getElementById("search-mode-fulltext");

@@ -1676,7 +1676,18 @@ a {
     grid-template-columns: 1fr;
   }
   .contacts-sidebar {
-    display: none;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .contacts-sidebar > .card {
+    flex: 1 1 240px;
+  }
+}
+
+@media (max-width: 560px) {
+  .contacts-sidebar {
+    flex-direction: column;
   }
 }
 

@@ -273,3 +273,48 @@ async def test_tenant_isolation(client, db_session):
     assert "Свой" in names
     assert "Чужой" not in names
     assert body["total"] == 1
+
+
+@pytest.mark.asyncio
+async def test_stats_empty(client):
+    resp = await client.get(f"{BASE}/stats")
+    assert resp.status_code == 200
+    assert resp.json() == {"total": 0, "by_type": {}}
+
+
+@pytest.mark.asyncio
+async def test_stats_groups_by_relationship_type(client):
+    await client.post(BASE, json={"full_name": "Ann", "relationship_type": "friend"})
+    await client.post(BASE, json={"full_name": "Bob", "relationship_type": "friend"})
+    await client.post(BASE, json={"full_name": "Cid", "relationship_type": "colleague"})
+    # контакт без relationship_type → ключ "other"
+    await client.post(BASE, json={"full_name": "Dan"})
+
+    resp = await client.get(f"{BASE}/stats")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] == 4
+    assert body["by_type"] == {"friend": 2, "colleague": 1, "other": 1}
+
+
+@pytest.mark.asyncio
+async def test_stats_tenant_isolation(client, db_session):
+    """Статистика не должна учитывать контакты чужого тенанта."""
+    from api.data_base.models import ContactCard, Tenant
+    from uuid import uuid4
+
+    other_tenant = Tenant(id=uuid4(), name=f"other-{uuid4().hex[:8]}")
+    db_session.add(other_tenant)
+    await db_session.flush()
+    db_session.add_all([
+        ContactCard(id=uuid4(), full_name="X1", relationship_type="friend", tenant_id=other_tenant.id),
+        ContactCard(id=uuid4(), full_name="X2", relationship_type="friend", tenant_id=other_tenant.id),
+    ])
+    await db_session.commit()
+
+    await client.post(BASE, json={"full_name": "Свой", "relationship_type": "colleague"})
+
+    resp = await client.get(f"{BASE}/stats")
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["by_type"] == {"colleague": 1}

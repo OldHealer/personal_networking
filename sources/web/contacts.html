@@ -93,12 +93,14 @@
 
             <section class="card form-card">
               <h2>Поиск</h2>
-              <div class="search-mode-switcher">
-                <button class="search-mode-btn is-active" data-mode="name" type="button">По имени</button>
-                <button class="search-mode-btn" data-mode="fulltext" type="button">По содержимому</button>
+              <div class="search-mode-switcher" role="tablist" aria-label="Режим поиска">
+                <button class="search-mode-btn is-active" data-mode="name" type="button"
+                        role="tab" id="search-tab-name" aria-controls="search-mode-name" aria-selected="true">По имени</button>
+                <button class="search-mode-btn" data-mode="fulltext" type="button"
+                        role="tab" id="search-tab-fulltext" aria-controls="search-mode-fulltext" aria-selected="false">По содержимому</button>
               </div>
 
-              <div id="search-mode-name" class="search-mode-panel">
+              <div id="search-mode-name" class="search-mode-panel" role="tabpanel" aria-labelledby="search-tab-name">
                 <form class="form" id="name-search-form" autocomplete="off">
                   <label class="field">
                     <span class="visually-hidden">Поиск по имени</span>
@@ -107,7 +109,7 @@
                 </form>
               </div>
 
-              <div id="search-mode-fulltext" class="search-mode-panel" hidden>
+              <div id="search-mode-fulltext" class="search-mode-panel" role="tabpanel" aria-labelledby="search-tab-fulltext" hidden>
                 <p class="muted search-mode-hint">По заметкам, обещаниям, интересам, целям и амбициям — во всех карточках и взаимодействиях.</p>
                 <form id="fulltext-form" class="form form-inline-compact" autocomplete="off">
                   <label class="field">
