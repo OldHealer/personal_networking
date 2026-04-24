@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy import or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.data_base.models import ContactCard, ContactLink
@@ -47,16 +48,30 @@ async def create_link_for_contact(
     await _ensure_contact_belongs_to_tenant(session, tenant_id, payload.contact_id_b)
 
     data = payload.model_dump()
+    is_directed = bool(data.get("is_directed", False))
+    a_id, b_id = contact_id_a, data["contact_id_b"]
+    # Для симметричных связей нормализуем порядок, чтобы uq_contact_links_pair_type
+    # ловил дубль и при обратной перестановке (A-B и B-A — одна и та же дружба).
+    if not is_directed and str(a_id) > str(b_id):
+        a_id, b_id = b_id, a_id
+
     link = ContactLink(
         tenant_id=tenant_id,
-        contact_id_a=contact_id_a,
-        contact_id_b=data["contact_id_b"],
+        contact_id_a=a_id,
+        contact_id_b=b_id,
         relationship_type=data["relationship_type"],
         context=data.get("context"),
-        is_directed=bool(data.get("is_directed", False)),
+        is_directed=is_directed,
     )
     session.add(link)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Link with this relationship type already exists between these contacts",
+        )
     await session.refresh(link)
     return link
 
@@ -85,7 +100,14 @@ async def update_link_for_contact(
     data = payload.model_dump(exclude_unset=True)
     for key, value in data.items():
         setattr(link, key, value)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Link with this relationship type already exists between these contacts",
+        )
     await session.refresh(link)
     return link
 

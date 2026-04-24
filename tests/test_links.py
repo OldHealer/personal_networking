@@ -29,8 +29,9 @@ async def test_create_link(client):
     )
     assert resp.status_code == 201
     body = resp.json()
-    assert body["contact_id_a"] == a
-    assert body["contact_id_b"] == b
+    # is_directed=False: порядок сторон нормализуется сервисом, поэтому
+    # сравниваем как с неупорядоченной парой.
+    assert {body["contact_id_a"], body["contact_id_b"]} == {a, b}
     assert body["relationship_type"] == "colleague"
     assert body["is_directed"] is False
 
@@ -107,6 +108,59 @@ async def test_update_link_not_found(client):
         json={"relationship_type": "friend"},
     )
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_create_duplicate_link_same_direction_conflict(client):
+    """Повторная связь того же типа между той же парой → 409."""
+    a = await _make_contact(client, "А")
+    b = await _make_contact(client, "Б")
+    first = await client.post(
+        f"{CONTACTS}/{a}/links",
+        json={"contact_id_b": b, "relationship_type": "colleague", "is_directed": True},
+    )
+    assert first.status_code == 201
+
+    dup = await client.post(
+        f"{CONTACTS}/{a}/links",
+        json={"contact_id_b": b, "relationship_type": "colleague", "is_directed": True},
+    )
+    assert dup.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_create_duplicate_undirected_link_reverse_order_conflict(client):
+    """A-B friend (undirected) уже есть → B-A friend тоже должен давать 409."""
+    a = await _make_contact(client, "А")
+    b = await _make_contact(client, "Б")
+    first = await client.post(
+        f"{CONTACTS}/{a}/links",
+        json={"contact_id_b": b, "relationship_type": "friend"},
+    )
+    assert first.status_code == 201
+
+    reverse = await client.post(
+        f"{CONTACTS}/{b}/links",
+        json={"contact_id_b": a, "relationship_type": "friend"},
+    )
+    assert reverse.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_create_different_relationship_type_allowed(client):
+    """Разные типы отношений между теми же контактами — не дубль."""
+    a = await _make_contact(client, "А")
+    b = await _make_contact(client, "Б")
+    r1 = await client.post(
+        f"{CONTACTS}/{a}/links",
+        json={"contact_id_b": b, "relationship_type": "colleague"},
+    )
+    r2 = await client.post(
+        f"{CONTACTS}/{a}/links",
+        json={"contact_id_b": b, "relationship_type": "friend"},
+    )
+    assert r1.status_code == 201
+    assert r2.status_code == 201
 
 
 @pytest.mark.asyncio

@@ -23,7 +23,7 @@ from datetime import date, datetime
 from enum import Enum
 from uuid import UUID, uuid4
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -133,6 +133,13 @@ class ContactLink(Base):
     """Связь между двумя контактами (граф отношений)."""
 
     __tablename__ = "contact_links"
+    # Запрещаем дубль связи одного типа между одной и той же парой контактов.
+    # Для симметричных (is_directed=False) порядок пары нормализуется в сервисе
+    # (contact_id_a < contact_id_b как строки), чтобы constraint ловил и обратную сторону.
+    __table_args__ = (
+        UniqueConstraint("contact_id_a", "contact_id_b", "relationship_type",
+                         name="uq_contact_links_pair_type"),
+    )
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4, doc="Идентификатор связи", )
     tenant_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="SET NULL"), index=True, doc="ID арендатора", )
