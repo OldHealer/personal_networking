@@ -39,6 +39,7 @@ poetry.lock
 # dotenv-файлы
 .env
 .env.*
+!.env.example
 
 # Тестовые отчёты и покрытия
 htmlcov/
