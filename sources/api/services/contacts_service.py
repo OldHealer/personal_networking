@@ -108,9 +108,13 @@ class ContactService:
         return items, total
 
 
-    async def get_contact(self, session: AsyncSession, contact_id: str):
-        """ Получить контакт по ID. """
-        contact = await self.dao.get_by_id(contact_id, session=session)
+    async def get_contact(self, session: AsyncSession, tenant_id, contact_id: str):
+        """ Получить контакт по ID с изоляцией по tenant_id. """
+        stmt = _apply_tenant_filter(
+            select(ContactCard).where(ContactCard.id == contact_id),
+            tenant_id,
+        )
+        contact = (await session.execute(stmt)).scalar_one_or_none()
         if contact is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
         return contact
@@ -139,18 +143,18 @@ class ContactService:
         return contact
 
 
-    async def update_contact(self, session: AsyncSession, contact_id: str, payload: ContactCardUpdate):
+    async def update_contact(self, session: AsyncSession, tenant_id, contact_id: str, payload: ContactCardUpdate):
         """ Частичное обновление контакта с проверкой tenant. """
-        await self.get_contact(session=session, contact_id=contact_id)
+        await self.get_contact(session=session, tenant_id=tenant_id, contact_id=contact_id)
         data = payload.model_dump(exclude_unset=True)
         contact = await self.dao.update(contact_id, data, session=session)
         logger.info(f"Updated contact {contact.full_name}, updated {data}")
         return contact
 
 
-    async def delete_contact(self, session: AsyncSession, contact_id: str):
+    async def delete_contact(self, session: AsyncSession, tenant_id, contact_id: str):
         """Удалить контакт с проверкой tenant."""
-        contact = await self.get_contact(session=session, contact_id=contact_id)
+        contact = await self.get_contact(session=session, tenant_id=tenant_id, contact_id=contact_id)
         await self.dao.delete(contact_id, session=session)
         logger.info(f"Deleted contact {contact.full_name}|{contact_id}")
         return None
@@ -188,16 +192,17 @@ async def create_contact(session, tenant_id, payload: ContactCardCreate):
     return await contact_service.create_contact(session=session, tenant_id=tenant_id, payload=payload)
 
 
-async def get_contact(session, contact_id: str):
-    return await contact_service.get_contact(session=session, contact_id=contact_id)
+async def get_contact(session, tenant_id, contact_id: str):
+    return await contact_service.get_contact(session=session, tenant_id=tenant_id, contact_id=contact_id)
 
 
-async def update_contact(session, contact_id: str, payload: ContactCardUpdate):
-    return await contact_service.update_contact(session=session, contact_id=contact_id, payload=payload)
+async def update_contact(session, tenant_id, contact_id: str, payload: ContactCardUpdate):
+    return await contact_service.update_contact(session=session, tenant_id=tenant_id, contact_id=contact_id,
+                                                payload=payload)
 
 
-async def delete_contact(session, contact_id: str):
-    return await contact_service.delete_contact(session=session, contact_id=contact_id)
+async def delete_contact(session, tenant_id, contact_id: str):
+    return await contact_service.delete_contact(session=session, tenant_id=tenant_id, contact_id=contact_id)
 
 
 async def get_stats(session, tenant_id) -> dict:

@@ -6,6 +6,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Fixed
+- **Security:** tenant isolation bypass in `GET/PATCH/DELETE /api/v1/contacts/{id}` — endpoints accepted any contact UUID without checking `tenant_id`, allowing cross-tenant reads/updates/deletes. Now `ContactService.get_contact/update_contact/delete_contact` require `tenant_id` and return 404 for contacts of other tenants. `contacts_tools.contacts_get` (agent tool) updated accordingly. 3 integration tests added (`test_get/update/delete_contact_tenant_isolation`).
+
 ### Added
 - Sidebar on contacts page: upcoming birthdays (top 3, sorted by days remaining), stale contacts (45+ days, random order), and contact stats widget
 - Stats endpoint `GET /api/v1/contacts/stats` — GROUP BY relationship_type, returns total + breakdown; 3 integration tests (empty, grouping, tenant isolation)

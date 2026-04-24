@@ -52,6 +52,7 @@ async def contacts_get(
 
     contact = await get_contact_service(
         session=session,
+        tenant_id=tenant_id,
         contact_id=contact_id,
     )
 

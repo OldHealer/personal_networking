@@ -275,6 +275,56 @@ async def test_tenant_isolation(client, db_session):
     assert body["total"] == 1
 
 
+async def _create_stranger_contact(db_session, full_name: str = "Чужой"):
+    from api.data_base.models import ContactCard, Tenant
+    from uuid import uuid4
+
+    other_tenant = Tenant(id=uuid4(), name=f"other-{uuid4().hex[:8]}")
+    db_session.add(other_tenant)
+    await db_session.flush()
+    stranger = ContactCard(id=uuid4(), full_name=full_name, tenant_id=other_tenant.id)
+    db_session.add(stranger)
+    await db_session.commit()
+    return stranger
+
+
+@pytest.mark.asyncio
+async def test_get_contact_tenant_isolation(client, db_session):
+    """GET /contacts/{id} чужого тенанта → 404."""
+    stranger = await _create_stranger_contact(db_session)
+    resp = await client.get(f"{BASE}/{stranger.id}")
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_update_contact_tenant_isolation(client, db_session):
+    """PATCH /contacts/{id} чужого тенанта → 404, данные не меняются."""
+    from api.data_base.models import ContactCard
+    from sqlalchemy import select
+
+    stranger = await _create_stranger_contact(db_session, full_name="Исходный")
+    resp = await client.patch(f"{BASE}/{stranger.id}", json={"full_name": "Взломано"})
+    assert resp.status_code == 404
+
+    # Имя в БД не должно измениться.
+    fresh = (await db_session.execute(select(ContactCard).where(ContactCard.id == stranger.id))).scalar_one()
+    assert fresh.full_name == "Исходный"
+
+
+@pytest.mark.asyncio
+async def test_delete_contact_tenant_isolation(client, db_session):
+    """DELETE /contacts/{id} чужого тенанта → 404, запись сохраняется."""
+    from api.data_base.models import ContactCard
+    from sqlalchemy import select
+
+    stranger = await _create_stranger_contact(db_session)
+    resp = await client.delete(f"{BASE}/{stranger.id}")
+    assert resp.status_code == 404
+
+    still_there = (await db_session.execute(select(ContactCard).where(ContactCard.id == stranger.id))).scalar_one_or_none()
+    assert still_there is not None
+
+
 @pytest.mark.asyncio
 async def test_stats_empty(client):
     resp = await client.get(f"{BASE}/stats")

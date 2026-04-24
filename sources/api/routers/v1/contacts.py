@@ -60,7 +60,8 @@ async def get_contact(
     session: AsyncSession = Depends(get_db_session),
 ):
     try:
-        contact = await get_contact_service(session=session, contact_id=contact_id)
+        contact = await get_contact_service(session=session, tenant_id=current_user.db_user.tenant_id,
+                                            contact_id=contact_id)
         return contact
     except HTTPException:
         raise
@@ -77,11 +78,13 @@ async def update_contact(contact_id: str,
                          payload: ContactCardUpdate,
                          current_user: CurrentUser = Depends(get_current_user),
                          session: AsyncSession = Depends(get_db_session)):
-    return await update_contact_service(session=session, contact_id=contact_id, payload=payload)
+    return await update_contact_service(session=session, tenant_id=current_user.db_user.tenant_id,
+                                        contact_id=contact_id, payload=payload)
 
 
 @contacts_router.delete("/{contact_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Удалить контакт")
 async def delete_contact(contact_id: str,
                          current_user: CurrentUser = Depends(get_current_user),
                          session: AsyncSession = Depends(get_db_session)):
-    return await delete_contact_service(session=session, contact_id=contact_id)
+    return await delete_contact_service(session=session, tenant_id=current_user.db_user.tenant_id,
+                                        contact_id=contact_id)
