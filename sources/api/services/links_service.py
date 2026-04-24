@@ -23,12 +23,16 @@ async def list_links_for_contact(
     tenant_id,
     contact_id: UUID,
 ):
+    # 404 если контакт не принадлежит тенанту — единая точка проверки с create/update/delete.
+    await _ensure_contact_belongs_to_tenant(session, tenant_id, contact_id)
     stmt = select(ContactLink).where(
         or_(
             ContactLink.contact_id_a == contact_id,
             ContactLink.contact_id_b == contact_id,
         )
     )
+    if tenant_id is not None:
+        stmt = stmt.where(ContactLink.tenant_id == tenant_id)
     result = await session.execute(stmt)
     return result.scalars().all()
 

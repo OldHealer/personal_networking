@@ -107,3 +107,31 @@ async def test_update_link_not_found(client):
         json={"relationship_type": "friend"},
     )
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_list_links_tenant_isolation(client, db_session):
+    """GET /contacts/{id}/links для контакта чужого тенанта → 404; чужие связи не утекают."""
+    from api.data_base.models import ContactCard, ContactLink, Tenant
+    from uuid import uuid4
+
+    other_tenant = Tenant(id=uuid4(), name=f"other-{uuid4().hex[:8]}")
+    db_session.add(other_tenant)
+    await db_session.flush()
+
+    x1 = ContactCard(id=uuid4(), full_name="X1", tenant_id=other_tenant.id)
+    x2 = ContactCard(id=uuid4(), full_name="X2", tenant_id=other_tenant.id)
+    db_session.add_all([x1, x2])
+    await db_session.flush()
+    db_session.add(ContactLink(
+        id=uuid4(),
+        tenant_id=other_tenant.id,
+        contact_id_a=x1.id,
+        contact_id_b=x2.id,
+        relationship_type="friend",
+    ))
+    await db_session.commit()
+
+    # Запрос к чужому контакту → 404, а не список его связей.
+    resp = await client.get(f"{CONTACTS}/{x1.id}/links")
+    assert resp.status_code == 404
