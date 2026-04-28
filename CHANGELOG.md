@@ -6,6 +6,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Added
+- 19 тестов для Concierge-агента (`tests/test_concierge_agent.py`): юнит-тесты узлов графа (`node_route_intent` — 5 случаев: intent/confidence/error; `node_collect_birthdays/promises`; `node_synthesize_report` — пустые ответы без вызова LLM, вызов LLM с данными; `node_ask_clarification`), интеграционные тесты полного графа (birthdays/promises/unknown), HTTP-эндпоинт (200, 422, 401). `agents_router` добавлен в тестовое приложение `conftest.py`.
+
 ### Fixed
 - UI: кнопка «Очистить ответ» под результатом обоих агентов (подготовка к встрече и консьерж). Скрыта по умолчанию, появляется после успешного ответа, сбрасывает текст результата и статус-строку.
 - UI-форма Консьержа: приведена к стилю карточки «Подготовка к встрече» — заголовок uppercase 0.85rem, поле `flex: 1`, кнопка `flex-shrink: 0` вровень снизу, textarea `resize: none`. Тёмная тема: заголовок `#fff`. Тултип `ⓘ` на заголовке с примерами запросов.
