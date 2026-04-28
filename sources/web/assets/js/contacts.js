@@ -1,4 +1,4 @@
-import { setFooterYear, setMessage, initTheme, setupThemeToggle } from "./ui.js";
+import { setFooterYear, setMessage, initTheme, setupThemeToggle, getToken, applyTokenFromHash, handleUnauthorized } from "./ui.js";
 
 const escapeHtml = (s) => {
   if (s == null) return "";
@@ -33,24 +33,6 @@ const state = {
   relationshipType: "",
   birthdaySoon: "",
 };
-
-const tokenKey = "access_token";
-
-/** Извлекает токен из hash после редиректа с логина и сохраняет в localStorage, затем убирает из URL (fallback, если strip-token-from-url.js не сработал). */
-function applyTokenFromHash() {
-  const hash = window.location.hash || "";
-  const match = /(?:^|&)access_token=([^&]+)/.exec(hash);
-  if (match) {
-    try {
-      const token = decodeURIComponent(match[1]);
-      if (token) localStorage.setItem(tokenKey, token);
-    } catch (e) {}
-    // Всегда убираем токен из URL, даже если сохранение не удалось
-    window.history.replaceState(null, "", window.location.pathname + window.location.search);
-  }
-}
-
-const getToken = () => localStorage.getItem(tokenKey);
 
 const renderContacts = (items) => {
   const grid = document.getElementById("contacts-grid");
@@ -103,32 +85,6 @@ const renderContacts = (items) => {
   });
 };
 
-const showAuthError = (detail) => {
-  const el = document.getElementById("auth-error");
-  if (el) {
-    el.textContent = `Ошибка авторизации: ${detail || "401"} — через 5 сек переход на вход.`;
-    el.style.display = "block";
-  }
-  console.error("API 401:", detail);
-};
-
-const handleUnauthorized = (response) => {
-  localStorage.removeItem(tokenKey);
-  response.text().then((body) => {
-    let detail = body;
-    try {
-      const parsed = JSON.parse(body);
-      if (parsed.detail) detail = parsed.detail;
-    } catch (_) {}
-    showAuthError(detail);
-    setTimeout(() => {
-      window.location.href = "/login.html";
-    }, 5000);
-  }).catch(() => {
-    showAuthError("401");
-    setTimeout(() => { window.location.href = "/login.html"; }, 5000);
-  });
-};
 
 // --- Meeting prep agent: автодополнение контакта + вызов агента ---
 

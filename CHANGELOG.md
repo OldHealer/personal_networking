@@ -7,6 +7,7 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Changed
+- **Auth JS deduplication:** `getToken()`, `applyTokenFromHash()`, `handleUnauthorized()` were copy-pasted identically in `contact.js` and `contacts.js`. Moved to `ui.js` as named exports; both files now import them. Removed local `showAuthError` helpers — display logic merged into `handleUnauthorized`.
 - **Agent timeouts:** `ChatOllama` now receives `timeout=AGENT__OLLAMA_TIMEOUT` (default 300 s) so a single stuck LLM call fails instead of hanging. The entire `graph.ainvoke` is wrapped in `asyncio.wait_for(timeout=AGENT__AGENT_TOTAL_TIMEOUT, default 720 s)`; on expiry the agent returns a structured error state instead of leaving the request open forever. Both values are configurable via env vars and documented in `.env.example`.
 - **Input length validation:** Pydantic schemas now enforce `max_length` matching the DB `String(N)` constraints (`full_name`/`email`/`username` → 255, `phone`/`channel` → 50, `relationship_type` on contacts → 20, on links → 50, `family_status` → 100, `password` → 128). `Text` columns are intentionally unbounded. Applies to `contacts.py`, `auth.py`, `admin_users.py` schemas.
 - **`LOCAL_DEV` flag:** was a hardcoded `bool = False` in `settings.py`. Now read from the `LOCAL_DEV` environment variable (`"1"/"true"/"yes"` → `True`). Set it in the shell or IDE run config when working locally against `.env.local`; production deployments need no change. Added commented example to `.env.example`.
