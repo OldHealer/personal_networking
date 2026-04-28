@@ -9,18 +9,18 @@ from api.data_base.models import RelationshipType
 class ContactCardBase(BaseModel):
     """Общие поля карточки контакта."""
 
-    full_name: str = Field(..., description="Полное имя")
+    full_name: str = Field(..., max_length=255, description="Полное имя")
     address: str | None = Field(None, description="Адрес")
-    phone: str | None = Field(None, description="Телефон")
-    email: str | None = Field(None, description="Email")
+    phone: str | None = Field(None, max_length=50, description="Телефон")
+    email: str | None = Field(None, max_length=255, description="Email")
     # Используем строку вместо enum, чтобы не падать на старых/нестандартных значениях.
     # На уровне БД по-прежнему храним строку с ожидаемыми значениями.
-    relationship_type: str | None = Field(None, description="Тип отношений (business/personal/other или произвольная строка)")
+    relationship_type: str | None = Field(None, max_length=20, description="Тип отношений (business/personal/other или произвольная строка)")
 
     hobbies: list | None = Field(default_factory=list, description="Хобби (список)")
     interests: list | None = Field(default_factory=list, description="Интересы (список)")
 
-    family_status: str | None = Field(None, description="Семейное положение")
+    family_status: str | None = Field(None, max_length=100, description="Семейное положение")
     birthday: date | None = Field(None, description="День рождения")
 
     promises: list | None = Field(default_factory=list, description="Обещания и упоминания (список агрегированных обещаний по всем взаимодействиям)")
@@ -35,18 +35,18 @@ class ContactCardCreate(ContactCardBase):
 class ContactCardUpdate(BaseModel):
     """Запрос на обновление карточки контакта."""
 
-    full_name: str | None = Field(None, description="Полное имя")
+    full_name: str | None = Field(None, max_length=255, description="Полное имя")
     address: str | None = Field(None, description="Адрес")
-    phone: str | None = Field(None, description="Телефон")
-    email: str | None = Field(None, description="Email")
+    phone: str | None = Field(None, max_length=50, description="Телефон")
+    email: str | None = Field(None, max_length=255, description="Email")
 
     # Для частичного обновления также принимаем произвольную строку/None без enum-валидации
-    relationship_type: str | None = Field(None, description="Тип отношений (business/personal/other или произвольная строка)")
+    relationship_type: str | None = Field(None, max_length=20, description="Тип отношений (business/personal/other или произвольная строка)")
 
     hobbies: list | None = Field(None, description="Хобби (список)")
     interests: list | None = Field(None, description="Интересы (список)")
 
-    family_status: str | None = Field(None, description="Семейное положение")
+    family_status: str | None = Field(None, max_length=100, description="Семейное положение")
     birthday: date | None = Field(None, description="День рождения")
 
     promises: list | None = Field(None, description="Обещания и упоминания (список агрегированных обещаний по всем взаимодействиям)")
@@ -98,7 +98,7 @@ class ContactCardListResponse(BaseModel):
 class ContactLinkBase(BaseModel):
     """Базовые поля связи между контактами."""
 
-    relationship_type: str = Field(..., description="Тип связи: spouse/friend/colleague/parent/child/other")
+    relationship_type: str = Field(..., max_length=50, description="Тип связи: spouse/friend/colleague/parent/child/other")
     context: str | None = Field(None, description="Контекст связи")
     is_directed: bool = Field(False, description="Флаг направления (True — направленная, False — симметричная)")
 
@@ -112,7 +112,7 @@ class ContactLinkCreate(ContactLinkBase):
 class ContactLinkUpdate(BaseModel):
     """Частичное обновление связи."""
 
-    relationship_type: str | None = Field(None, description="Тип связи")
+    relationship_type: str | None = Field(None, max_length=50, description="Тип связи")
     context: str | None = Field(None, description="Контекст связи")
     is_directed: bool | None = Field(None, description="Флаг направления")
 
@@ -132,7 +132,7 @@ class ContactInteractionBase(BaseModel):
     """Базовые поля взаимодействия."""
 
     occurred_at: datetime = Field(..., description="Дата и время взаимодействия")
-    channel: str | None = Field(None, description="Канал общения (встреча/звонок/сообщение)")
+    channel: str | None = Field(None, max_length=50, description="Канал общения (встреча/звонок/сообщение)")
     notes: str | None = Field(None, description="Заметки о встрече")
     promises: list | None = Field(default_factory=list, description="Обещания/упоминания (сырые данные по взаимодействию)")
     mentions: list | None = Field(default_factory=list, description="Темы и упоминания (список)")
@@ -146,7 +146,7 @@ class ContactInteractionUpdate(BaseModel):
     """Частичное обновление взаимодействия."""
 
     occurred_at: datetime | None = Field(None, description="Дата и время взаимодействия")
-    channel: str | None = Field(None, description="Канал общения (встреча/звонок/сообщение)")
+    channel: str | None = Field(None, max_length=50, description="Канал общения (встреча/звонок/сообщение)")
     notes: str | None = Field(None, description="Заметки о встрече")
     promises: list | None = Field(None, description="Обновлённый список обещаний")
     mentions: list | None = Field(None, description="Обновлённый список упоминаний")

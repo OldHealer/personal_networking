@@ -3,12 +3,12 @@ from pydantic import BaseModel, EmailStr, Field
 
 class RegisterRequest(BaseModel):
     """Запрос на самостоятельную регистрацию пользователя."""
-    username: str = Field(..., description="Имя пользователя")
+    username: str = Field(..., max_length=255, description="Имя пользователя")
     email: EmailStr = Field(..., description="Email пользователя (уникальный)")
-    password: str = Field(..., min_length=6, description="Пароль пользователя")
-    first_name: str | None = Field(None, description="Имя")
-    last_name: str | None = Field(None, description="Фамилия")
-    tenant_name: str | None = Field(None, description="Название арендатора (опционально)")
+    password: str = Field(..., min_length=6, max_length=128, description="Пароль пользователя")
+    first_name: str | None = Field(None, max_length=255, description="Имя")
+    last_name: str | None = Field(None, max_length=255, description="Фамилия")
+    tenant_name: str | None = Field(None, max_length=255, description="Название арендатора (опционально)")
 
 class RegisterResponse(BaseModel):
     """Ответ после регистрации пользователя."""
@@ -18,8 +18,8 @@ class RegisterResponse(BaseModel):
 
 class LoginRequest(BaseModel):
     """Запрос на авторизацию."""
-    username: str = Field(..., description="Логин или email пользователя")
-    password: str = Field(..., min_length=6, description="Пароль пользователя")
+    username: str = Field(..., max_length=255, description="Логин или email пользователя")
+    password: str = Field(..., min_length=6, max_length=128, description="Пароль пользователя")
 
 class LoginResponse(BaseModel):
     """Ответ с токенами Keycloak."""
