@@ -1,6 +1,6 @@
 import asyncio
-import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from sqlalchemy import text
@@ -41,11 +41,19 @@ async def ensure_database_exists() -> bool:
     return exists
 
 
-def run_migrations() -> None:
-    """Запускает alembic upgrade head."""
-    alembic_ini = config.alembic_path
-    cmd = [sys.executable, "-m", "alembic", "-c", alembic_ini, "upgrade", "head"]
-    subprocess.run(cmd, check=True)
+def _run_migrations_sync() -> None:
+    from alembic.config import Config
+    from alembic import command as alembic_command
+
+    alembic_cfg = Config(config.alembic_path)
+    alembic_command.upgrade(alembic_cfg, "head")
+
+
+async def run_migrations() -> None:
+    """Запускает alembic upgrade head в отдельном потоке (у него свой event loop)."""
+    loop = asyncio.get_running_loop()
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        await loop.run_in_executor(executor, _run_migrations_sync)
 
 
 async def main() -> None:
