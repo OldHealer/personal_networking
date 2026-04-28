@@ -55,8 +55,8 @@ class Tenant(Base):
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4, doc="Идентификатор арендатора",)
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True, doc="Название арендатора",)
 
-    users: Mapped[list["AppUser"]] = relationship("AppUser", back_populates="tenant", cascade="all, delete-orphan", lazy="selectin",)
-    contacts: Mapped[list["ContactCard"]] = relationship("ContactCard", back_populates="tenant", cascade="all, delete-orphan", lazy="selectin",)
+    users: Mapped[list["AppUser"]] = relationship("AppUser", back_populates="tenant", cascade="all, delete-orphan", lazy="raise",)
+    contacts: Mapped[list["ContactCard"]] = relationship("ContactCard", back_populates="tenant", cascade="all, delete-orphan", lazy="raise",)
 
 
 class AppUser(Base):
@@ -94,22 +94,22 @@ class ContactCard(Base):
     goals: Mapped[list | None] = mapped_column(JSON, default=list, doc="Цели и амбиции (список)",)
     ambitions: Mapped[str | None] = mapped_column(Text, doc="Амбиции и планы",)
 
-    family_members: Mapped[list["ContactFamilyMember"]] = relationship("ContactFamilyMember", back_populates="contact", cascade="all, delete-orphan", lazy="selectin",)
-    interactions: Mapped[list["ContactInteraction"]] = relationship("ContactInteraction", back_populates="contact", cascade="all, delete-orphan", lazy="selectin",)
+    family_members: Mapped[list["ContactFamilyMember"]] = relationship("ContactFamilyMember", back_populates="contact", cascade="all, delete-orphan", lazy="raise",)
+    interactions: Mapped[list["ContactInteraction"]] = relationship("ContactInteraction", back_populates="contact", cascade="all, delete-orphan", lazy="raise",)
     tenant: Mapped["Tenant | None"] = relationship("Tenant", back_populates="contacts", primaryjoin="ContactCard.tenant_id == Tenant.id",)
     links_from: Mapped[list["ContactLink"]] = relationship(
             "ContactLink",
             foreign_keys="ContactLink.contact_id_a",
             back_populates="contact_a",
             cascade="all, delete-orphan",
-            lazy="selectin",
+            lazy="raise",
         )
     links_to: Mapped[list["ContactLink"]] = relationship(
         "ContactLink",
         foreign_keys="ContactLink.contact_id_b",
         back_populates="contact_b",
         cascade="all, delete-orphan",
-        lazy="selectin",
+        lazy="raise",
     )
 
 

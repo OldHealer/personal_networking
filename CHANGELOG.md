@@ -6,6 +6,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Changed
+- **ORM lazy loading:** all collection relationships (`Tenant.users`, `Tenant.contacts`, `ContactCard.family_members/interactions/links_from/links_to`) changed from `lazy="selectin"` to `lazy="raise"`. Previously every `GET /contacts/{id}` and list query fired 4–6 extra SELECTs for collections that are never accessed via ORM (all data is fetched through explicit service queries). With `lazy="raise"` accidental attribute access raises an explicit error instead of silently issuing a query.
+
 ### Fixed
 - **Alembic migrations at startup:** `run_migrations()` now runs alembic in a `ThreadPoolExecutor` so `asyncio.run()` inside `env.py` doesn't conflict with the FastAPI lifespan event loop. `alembic/env.py` no longer passes the DB URL through `config.set_main_option` (ConfigParser breaks on `%` in passwords) — uses a `sqlalchemy.engine.URL` object directly instead. `db_bootstrap.py` calls `alembic.command.upgrade` via Python API instead of `python -m alembic` subprocess.
 - **Security (ops):** removed `:-<default>` fallbacks for all password variables in `docker-compose.yml` (`DATABASE__DB_PASSWORD`, `KEYCLOAK_DB_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`). Replaced with `${VAR:?message}` — compose refuses to start if a password is missing, instead of silently booting the stack with the fallback values that used to leak via `git show`. Usernames / DB names kept their defaults (not secrets). Introduced `.env.example` with all required keys and a `python -c "import secrets; ..."` hint for `TOKEN__SECRET_KEY`; `.gitignore` updated to un-ignore `.env.example`.
