@@ -672,6 +672,7 @@ a {
 .form-card .field textarea {
   min-height: 4rem;
   resize: vertical;
+  font-family: inherit;
 }
 
 .form-card .field input:not([type="checkbox"]):not([type="radio"]):hover,
