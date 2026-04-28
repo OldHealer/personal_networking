@@ -7,6 +7,7 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Changed
+- **Auth route tests:** 8 integration tests for `/api/v1/auth` — `GET /me` (authenticated + unauthenticated), `POST /register` (success, duplicate email → 409, username too long → 422, password too short → 422), `POST /login` (success, wrong credentials → 401). Keycloak calls mocked with `AsyncMock`. `auth_router` added to the shared test app in `conftest.py`.
 - **Auth JS deduplication:** `getToken()`, `applyTokenFromHash()`, `handleUnauthorized()` were copy-pasted identically in `contact.js` and `contacts.js`. Moved to `ui.js` as named exports; both files now import them. Removed local `showAuthError` helpers — display logic merged into `handleUnauthorized`.
 - **Agent timeouts:** `ChatOllama` now receives `timeout=AGENT__OLLAMA_TIMEOUT` (default 300 s) so a single stuck LLM call fails instead of hanging. The entire `graph.ainvoke` is wrapped in `asyncio.wait_for(timeout=AGENT__AGENT_TOTAL_TIMEOUT, default 720 s)`; on expiry the agent returns a structured error state instead of leaving the request open forever. Both values are configurable via env vars and documented in `.env.example`.
 - **Input length validation:** Pydantic schemas now enforce `max_length` matching the DB `String(N)` constraints (`full_name`/`email`/`username` → 255, `phone`/`channel` → 50, `relationship_type` on contacts → 20, on links → 50, `family_status` → 100, `password` → 128). `Text` columns are intentionally unbounded. Applies to `contacts.py`, `auth.py`, `admin_users.py` schemas.
