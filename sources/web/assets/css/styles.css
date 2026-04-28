@@ -813,12 +813,14 @@ a {
   margin: 0;
 }
 
-/* Карточка ИИ-агента */
-.form-card:has(#prepare-meeting-form) {
+/* Карточки ИИ-агентов */
+.form-card:has(#prepare-meeting-form),
+.form-card:has(#concierge-form) {
   padding: 0.9rem 1.25rem;
 }
 
-.form-card:has(#prepare-meeting-form) h2 {
+.form-card:has(#prepare-meeting-form) h2,
+.form-card:has(#concierge-form) h2 {
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -835,28 +837,39 @@ a {
   font-size: 0.8rem;
 }
 
-/* Поле «Контакт»: мелкий muted текст как описание */
-#prepare-meeting-form .field > span {
+.form-card:has(#concierge-form) .field textarea {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  resize: none;
+}
+
+/* Поле «Контакт» / «Запрос»: мелкий muted текст как описание */
+#prepare-meeting-form .field > span,
+#concierge-form .field > span {
   font-size: 0.8rem;
   font-weight: 400;
   color: #6d5a48;
 }
 
 /* Форма: поле растягивается, кнопка прижата вправо */
-#prepare-meeting-form {
+#prepare-meeting-form,
+#concierge-form {
   display: flex;
   align-items: flex-end;
   gap: 0.75rem;
   margin-top: 0;
 }
 
-#prepare-meeting-form .field {
+#prepare-meeting-form .field,
+#concierge-form .field {
   flex: 1;
   min-width: 0;
   margin: 0;
 }
 
-#prepare-meeting-form .form-card-actions {
+#prepare-meeting-form .form-card-actions,
+#concierge-form .form-card-actions {
   flex-shrink: 0;
   margin-top: 0;
 }
@@ -1810,6 +1823,7 @@ a {
 }
 
 [data-theme="dark"] .form-card:has(#prepare-meeting-form) h2,
+[data-theme="dark"] .form-card:has(#concierge-form) h2,
 [data-theme="dark"] .form-card:has(#fulltext-form) h2,
 [data-theme="dark"] .add-contact-compact h2 {
   color: #fff;

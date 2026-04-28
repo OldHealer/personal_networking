@@ -7,6 +7,7 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Fixed
+- UI-форма Консьержа: приведена к стилю карточки «Подготовка к встрече» — заголовок uppercase 0.85rem, поле `flex: 1`, кнопка `flex-shrink: 0` вровень снизу, textarea `resize: none`. Тёмная тема: заголовок `#fff`. Тултип `ⓘ` на заголовке с примерами запросов.
 - Concierge-агент: LangGraph узлы регистрировались через синхронные lambda-обёртки вокруг async-функций → LangGraph получал coroutine-объект вместо dict (`InvalidUpdateError`). Заменены на `async def` вложенные функции с захватом `cfg` из замыкания.
 - Concierge-агент: LLM считал дни до ДР от своей тренировочной даты (апрель 14). Теперь `date.today().isoformat()` передаётся в system prompt `node_synthesize_report` для ветки birthdays.
 - UI-форма Консьержа: убран класс `form-inline-compact` (textarea не вписывается в двухколоночную сетку); кнопка `#concierge-button` получила те же размеры, что и `#prepare-meeting-button`.
