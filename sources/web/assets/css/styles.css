@@ -617,8 +617,9 @@ a {
   margin: 0;
 }
 
-/* Подравниваем высоту кнопки под высоту поля "Контакт" */
-#prepare-meeting-button {
+/* Подравниваем высоту кнопок агентов */
+#prepare-meeting-button,
+#concierge-button {
   min-height: 2.25rem;
   padding: 0.4rem 1.2rem;
   font-size: 0.8rem;

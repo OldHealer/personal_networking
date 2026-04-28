@@ -22,6 +22,7 @@ import asyncio
 import json
 import re
 from dataclasses import dataclass
+from datetime import date
 from typing import Any, Literal, NotRequired, TypedDict
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -255,6 +256,8 @@ async def node_synthesize_report(state: ConciergeState, *, cfg: ConciergeAgentCo
     """LLM формирует финальный отчёт по собранным данным."""
     intent = state.get("intent", "unknown")
 
+    today = date.today().isoformat()
+
     if intent == "birthdays":
         contacts = state.get("shortlist", [])
         days = state.get("time_window", 30)
@@ -263,8 +266,9 @@ async def node_synthesize_report(state: ConciergeState, *, cfg: ConciergeAgentCo
             state["status"] = "ok"
             return state
         system = SystemMessage(content=(
+            f"Сегодня {today}.\n"
             "Составь краткий отчёт о предстоящих днях рождения контактов.\n"
-            "Для каждого: имя, дата рождения, сколько дней осталось.\n"
+            "Для каждого: имя, дата рождения, сколько дней осталось (считай от сегодняшней даты).\n"
             "Формат: markdown-список."
         ))
         human = HumanMessage(content=f"Контакты с ДР в ближайшие {days} дней:\n{contacts}")
@@ -347,12 +351,19 @@ async def node_format_error(state: ConciergeState) -> ConciergeState:
 def build_concierge_graph(cfg: ConciergeAgentConfig):
     g: StateGraph = StateGraph(ConciergeState)
 
-    g.add_node("route_intent",      lambda s: node_route_intent(s, cfg=cfg))
-    g.add_node("collect_birthdays", lambda s: node_collect_birthdays(s, cfg=cfg))
-    g.add_node("collect_promises",  lambda s: node_collect_promises(s, cfg=cfg))
-    g.add_node("build_shortlist",   lambda s: node_build_shortlist(s, cfg=cfg))
-    g.add_node("enrich_context",    lambda s: node_enrich_context(s, cfg=cfg))
-    g.add_node("synthesize_report", lambda s: node_synthesize_report(s, cfg=cfg))
+    async def _route(s):      return await node_route_intent(s, cfg=cfg)
+    async def _birthdays(s):  return await node_collect_birthdays(s, cfg=cfg)
+    async def _promises(s):   return await node_collect_promises(s, cfg=cfg)
+    async def _shortlist(s):  return await node_build_shortlist(s, cfg=cfg)
+    async def _enrich(s):     return await node_enrich_context(s, cfg=cfg)
+    async def _synthesize(s): return await node_synthesize_report(s, cfg=cfg)
+
+    g.add_node("route_intent",      _route)
+    g.add_node("collect_birthdays", _birthdays)
+    g.add_node("collect_promises",  _promises)
+    g.add_node("build_shortlist",   _shortlist)
+    g.add_node("enrich_context",    _enrich)
+    g.add_node("synthesize_report", _synthesize)
     g.add_node("ask_clarification", node_ask_clarification)
     g.add_node("format_error",      node_format_error)
 

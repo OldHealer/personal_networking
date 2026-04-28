@@ -6,6 +6,11 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Fixed
+- Concierge-агент: LangGraph узлы регистрировались через синхронные lambda-обёртки вокруг async-функций → LangGraph получал coroutine-объект вместо dict (`InvalidUpdateError`). Заменены на `async def` вложенные функции с захватом `cfg` из замыкания.
+- Concierge-агент: LLM считал дни до ДР от своей тренировочной даты (апрель 14). Теперь `date.today().isoformat()` передаётся в system prompt `node_synthesize_report` для ветки birthdays.
+- UI-форма Консьержа: убран класс `form-inline-compact` (textarea не вписывается в двухколоночную сетку); кнопка `#concierge-button` получила те же размеры, что и `#prepare-meeting-button`.
+
 ### Added
 - UI-карточка «Консьерж» на странице контактов: textarea для свободного запроса, кнопка «Спросить», отображение ответа агента с указанием распознанного намерения. Вызывает `POST /api/v1/agents/concierge`. Функция `runConcierge()` в `contacts.js`, событие `submit` на форме и `click` на кнопке.
 - Concierge-агент (`concierge_agent.py`) — мультисценарный LangGraph-граф с ветвлением по намерению: birthdays (ДР в окне N дней), promises (сводка открытых обещаний mine/theirs), matchmaker (поиск контакта под задачу с enrich-шагом), unknown (запрос уточнения). Эндпоинт `POST /api/v1/agents/concierge`. Схемы `ConciergeRequest/Response`.
