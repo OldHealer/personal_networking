@@ -22,6 +22,7 @@ from api.routers.v1.contacts import contacts_router
 from api.routers.v1.contact_links import contact_links_router
 from api.routers.v1.contact_interactions import contact_interactions_router
 from api.routers.v1.search import search_router
+from api.routers.v1.promises import promises_router
 from api.data_base.base import db
 from utils.db_bootstrap import ensure_database_exists, run_migrations
 from utils.search_bootstrap import ensure_fulltext_search
@@ -67,6 +68,7 @@ async def lifespan(app: FastAPI):
         app.include_router(contact_links_router)
         app.include_router(contact_interactions_router)
         app.include_router(search_router)
+        app.include_router(promises_router)
         app.include_router(agents_router)
 
         # Передача управления FastAPI

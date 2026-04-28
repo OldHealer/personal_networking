@@ -166,3 +166,22 @@ class ContactInteractionResponse(ContactInteractionBase):
 
     id: UUID
     contact_id: UUID
+
+
+class PromiseOut(BaseModel):
+    """Одно обещание из агрегата — с привязкой к контакту."""
+
+    promise_id: str
+    text: str | None
+    direction: str | None
+    completed_at: str | None
+    contact_id: UUID
+    contact_name: str
+    interaction_id: str | None
+
+
+class PromiseListResponse(BaseModel):
+    """Список обещаний по всем контактам тенанта."""
+
+    items: list[PromiseOut]
+    total: int

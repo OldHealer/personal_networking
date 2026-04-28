@@ -109,6 +109,7 @@ def _build_app():
     from api.routers.v1.contact_links import contact_links_router
     from api.routers.v1.contact_interactions import contact_interactions_router
     from api.routers.v1.search import search_router
+    from api.routers.v1.promises import promises_router
 
     # Переиспользуем те же exception handlers, что и в проде.
     from api.fastapi_app import (
@@ -125,6 +126,7 @@ def _build_app():
     app.include_router(contact_links_router)
     app.include_router(contact_interactions_router)
     app.include_router(search_router)
+    app.include_router(promises_router)
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(Exception, generic_exception_handler)

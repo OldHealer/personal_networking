@@ -6,6 +6,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Added
+- `GET /api/v1/promises` — агрегированный список обещаний по всем контактам тенанта. Параметры: `open=true` (только незакрытые, по умолчанию), `direction=mine|theirs`. Каждый элемент содержит `promise_id`, `text`, `direction`, `completed_at`, `contact_id`, `contact_name`, `interaction_id`. Читает из `ContactCard.promises` (денормализованный агрегат) — один SELECT. 7 интеграционных тестов.
+
 ### Changed
 - **Auth route tests:** 8 integration tests for `/api/v1/auth` — `GET /me` (authenticated + unauthenticated), `POST /register` (success, duplicate email → 409, username too long → 422, password too short → 422), `POST /login` (success, wrong credentials → 401). Keycloak calls mocked with `AsyncMock`. `auth_router` added to the shared test app in `conftest.py`.
 - **Auth JS deduplication:** `getToken()`, `applyTokenFromHash()`, `handleUnauthorized()` were copy-pasted identically in `contact.js` and `contacts.js`. Moved to `ui.js` as named exports; both files now import them. Removed local `showAuthError` helpers — display logic merged into `handleUnauthorized`.

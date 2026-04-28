@@ -232,6 +232,42 @@ async def delete_promise_for_contact(
     await _rebuild_promises_for_contact(session, contact)
 
 
+async def list_promises(
+    session: AsyncSession,
+    tenant_id,
+    open_only: bool = True,
+    direction: str | None = None,
+) -> list[dict]:
+    """Агрегирует обещания по всем контактам тенанта.
+
+    Читает ContactCard.promises (уже денормализованный агрегат) — один SELECT.
+    """
+    stmt = select(ContactCard)
+    if tenant_id is not None:
+        stmt = stmt.where(ContactCard.tenant_id == tenant_id)
+    result = await session.execute(stmt)
+    contacts = result.scalars().all()
+
+    items: list[dict] = []
+    for contact in contacts:
+        for raw in contact.promises or []:
+            p = dict(raw) if isinstance(raw, dict) else {"text": str(raw)}
+            if open_only and p.get("completed_at"):
+                continue
+            if direction is not None and p.get("direction") != direction:
+                continue
+            items.append({
+                "promise_id": p.get("id", ""),
+                "text": p.get("text"),
+                "direction": p.get("direction"),
+                "completed_at": p.get("completed_at"),
+                "contact_id": contact.id,
+                "contact_name": contact.full_name,
+                "interaction_id": p.get("interaction_id"),
+            })
+    return items
+
+
 async def complete_promise_for_contact(
     session: AsyncSession,
     tenant_id,
