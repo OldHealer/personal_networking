@@ -1,4 +1,17 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+class ConciergeRequest(BaseModel):
+    """Запрос к Concierge-агенту."""
+    message: str = Field(..., min_length=1, max_length=500, description="Свободный текст запроса")
+
+
+class ConciergeResponse(BaseModel):
+    """Ответ Concierge-агента."""
+    intent: str = Field(..., description="Распознанное намерение: birthdays | promises | matchmaker | unknown | error")
+    final_reply: str = Field(..., description="Готовый markdown-ответ для отображения в UI")
+    audit: list[str] = Field(default_factory=list, description="Журнал вызовов tools (для отладки)")
+    status: str = Field(..., description="ok | error | clarification")
 
 
 class PrepareMeetingRequest(BaseModel):
