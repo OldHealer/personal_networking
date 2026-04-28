@@ -617,6 +617,30 @@ a {
   margin: 0;
 }
 
+.agent-clear-btn {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border, #d4c4b0);
+  color: var(--muted, #6d5a48);
+}
+
+.agent-clear-btn:hover {
+  background: var(--bg-muted, #f5efe8);
+  color: var(--text, #3a2e24);
+}
+
+[data-theme="dark"] .agent-clear-btn {
+  border-color: #4a3f35;
+  color: #a89880;
+}
+
+[data-theme="dark"] .agent-clear-btn:hover {
+  background: #2e2820;
+  color: #e8ddd0;
+}
+
 /* Подравниваем высоту кнопок агентов */
 #prepare-meeting-button,
 #concierge-button {

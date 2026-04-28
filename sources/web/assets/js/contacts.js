@@ -265,6 +265,7 @@ async function prepareMeeting() {
   const contactIdEl = document.getElementById("prepare-meeting-contact-id");
   const messageEl = document.getElementById("prepare-meeting-message");
   const resultEl = document.getElementById("prepare-meeting-result");
+  const clearBtn = document.getElementById("prepare-meeting-clear");
   if (!input || !contactIdEl || !messageEl || !resultEl) return;
 
   const query = String(input.value || "").trim();
@@ -313,6 +314,7 @@ async function prepareMeeting() {
 
     messageEl.textContent = `Контакт: ${data.contact_name || data.contact_id || "неизвестен"}`;
     resultEl.textContent = data.raw_markdown || "";
+    if (clearBtn) clearBtn.style.display = resultEl.textContent ? "" : "none";
   } catch (e) {
     messageEl.textContent = "Сетевая ошибка при обращении к агенту.";
   }
@@ -324,6 +326,7 @@ async function runConcierge() {
   const messageEl = document.getElementById("concierge-message");
   const statusEl = document.getElementById("concierge-status");
   const resultEl = document.getElementById("concierge-result");
+  const clearBtn = document.getElementById("concierge-clear");
   if (!messageEl || !statusEl || !resultEl) return;
 
   const message = String(messageEl.value || "").trim();
@@ -370,6 +373,7 @@ async function runConcierge() {
 
     statusEl.textContent = `Намерение: ${data.intent || "—"} · ${data.status || "ok"}`;
     resultEl.textContent = data.final_reply || "";
+    if (clearBtn) clearBtn.style.display = resultEl.textContent ? "" : "none";
   } catch (e) {
     statusEl.textContent = "Сетевая ошибка при обращении к агенту.";
   }
@@ -736,6 +740,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initPrepareMeetingAutocomplete();
 
+  const pmClear = document.getElementById("prepare-meeting-clear");
+  if (pmClear) {
+    pmClear.addEventListener("click", () => {
+      document.getElementById("prepare-meeting-result").textContent = "";
+      document.getElementById("prepare-meeting-message").textContent = "";
+      pmClear.style.display = "none";
+    });
+  }
+
   const conciergeForm = document.getElementById("concierge-form");
   if (conciergeForm) {
     conciergeForm.addEventListener("submit", (e) => {
@@ -746,6 +759,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const conciergeButton = document.getElementById("concierge-button");
   if (conciergeButton) {
     conciergeButton.addEventListener("click", runConcierge);
+  }
+
+  const conciergeClear = document.getElementById("concierge-clear");
+  if (conciergeClear) {
+    conciergeClear.addEventListener("click", () => {
+      document.getElementById("concierge-result").textContent = "";
+      document.getElementById("concierge-status").textContent = "";
+      conciergeClear.style.display = "none";
+    });
   }
 
   const sortSelect = document.getElementById("contacts-sort");
