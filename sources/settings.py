@@ -10,7 +10,7 @@ from pydantic import SecretStr, BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-LOCAL_DEV: bool = False # Флаг для локального запуска с IDE и миграций
+LOCAL_DEV: bool = os.getenv("LOCAL_DEV", "false").lower() in ("1", "true", "yes")
 
 
 class ApiSettings(BaseModel):
@@ -139,6 +139,8 @@ class AgentSettings(BaseModel):
     ollama_model: str = Field(default="qwen2.5:14b", description="Модель Ollama")
     ollama_temperature: float = Field(default=0.7, description="Температура LLM")
     ollama_num_predict: int = Field(default=2048, description="Максимальное число генерируемых токенов")
+    ollama_timeout: int = Field(default=300, description="Таймаут одного вызова Ollama в секундах")
+    agent_total_timeout: int = Field(default=720, description="Жёсткий потолок на весь запуск агента в секундах")
     interactions_limit: int = Field(default=10, description="Лимит взаимодействий для агента")
 
 

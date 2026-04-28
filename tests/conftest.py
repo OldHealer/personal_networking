@@ -104,6 +104,7 @@ async def test_user(db_session) -> CurrentUser:
 def _build_app():
     """Собираем FastAPI-приложение без запуска lifespan (миграции и логи не нужны в тестах)."""
     from fastapi import FastAPI
+    from api.routers.v1.auth import auth_router
     from api.routers.v1.contacts import contacts_router
     from api.routers.v1.contact_links import contact_links_router
     from api.routers.v1.contact_interactions import contact_interactions_router
@@ -119,6 +120,7 @@ def _build_app():
     from fastapi.exceptions import RequestValidationError
 
     app = FastAPI(title="Rockfile-tests")
+    app.include_router(auth_router)
     app.include_router(contacts_router)
     app.include_router(contact_links_router)
     app.include_router(contact_interactions_router)

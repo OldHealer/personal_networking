@@ -1,21 +1,4 @@
-import { setFooterYear, setMessage, initTheme, setupThemeToggle } from "./ui.js";
-
-const tokenKey = "access_token";
-
-/** Fallback: извлекает токен из hash и убирает из URL (основная очистка — strip-token-from-url.js). */
-function applyTokenFromHash() {
-  const hash = window.location.hash || "";
-  const match = /(?:^|&)access_token=([^&]+)/.exec(hash);
-  if (match) {
-    try {
-      const token = decodeURIComponent(match[1]);
-      if (token) localStorage.setItem(tokenKey, token);
-    } catch (e) {}
-    window.history.replaceState(null, "", window.location.pathname + window.location.search);
-  }
-}
-
-const getToken = () => localStorage.getItem(tokenKey);
+import { setFooterYear, setMessage, initTheme, setupThemeToggle, getToken, applyTokenFromHash, handleUnauthorized } from "./ui.js";
 
 function escapeHtml(s) {
   if (s == null) return "";
@@ -36,29 +19,6 @@ function apiHeaders() {
   };
 }
 
-function showAuthError(detail) {
-  const el = document.getElementById("auth-error");
-  if (el) {
-    el.textContent = `Ошибка авторизации: ${detail || "401"}.`;
-    el.style.display = "block";
-  }
-}
-
-function handleUnauthorized(response) {
-  localStorage.removeItem(tokenKey);
-  response.text().then((body) => {
-    let detail = body;
-    try {
-      const parsed = JSON.parse(body);
-      if (parsed.detail) detail = parsed.detail;
-    } catch (_) {}
-    showAuthError(detail);
-    setTimeout(() => { window.location.href = "/login.html"; }, 3000);
-  }).catch(() => {
-    showAuthError("401");
-    setTimeout(() => { window.location.href = "/login.html"; }, 3000);
-  });
-}
 
 function toDatetimeLocal(iso) {
   if (!iso) return "";

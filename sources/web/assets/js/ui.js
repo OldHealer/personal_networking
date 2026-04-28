@@ -1,3 +1,46 @@
+const _TOKEN_KEY = "access_token";
+
+export function getToken() {
+  return localStorage.getItem(_TOKEN_KEY);
+}
+
+/** Fallback: извлекает токен из URL-хэша и убирает его из адресной строки. */
+export function applyTokenFromHash() {
+  const hash = window.location.hash || "";
+  const match = /(?:^|&)access_token=([^&]+)/.exec(hash);
+  if (match) {
+    try {
+      const token = decodeURIComponent(match[1]);
+      if (token) localStorage.setItem(_TOKEN_KEY, token);
+    } catch (e) {}
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+}
+
+/** Обрабатывает 401: очищает токен, показывает ошибку, редиректит на /login.html. */
+export function handleUnauthorized(response, { redirectDelay = 3000 } = {}) {
+  localStorage.removeItem(_TOKEN_KEY);
+  const _show = (detail) => {
+    const el = document.getElementById("auth-error");
+    if (el) {
+      el.textContent = `Ошибка авторизации: ${detail || "401"}.`;
+      el.style.display = "block";
+    }
+  };
+  response.text().then((body) => {
+    let detail = body;
+    try {
+      const parsed = JSON.parse(body);
+      if (parsed.detail) detail = parsed.detail;
+    } catch (_) {}
+    _show(detail);
+    setTimeout(() => { window.location.href = "/login.html"; }, redirectDelay);
+  }).catch(() => {
+    _show("401");
+    setTimeout(() => { window.location.href = "/login.html"; }, redirectDelay);
+  });
+}
+
 let _toastTimer = null;
 
 export function showToast(message, type = "error") {

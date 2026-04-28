@@ -19,7 +19,7 @@ a {
 }
 
 .container {
-  width: min(1100px, 92%);
+  width: min(1400px, 94%);
   margin: 0 auto;
 }
 
@@ -227,7 +227,7 @@ a {
 }
 
 .button {
-  background: #c96c4b;
+  background: #b08040;
   color: #fff;
   padding: 0.7rem 1.6rem;
   border-radius: 8px;
@@ -237,13 +237,13 @@ a {
 }
 
 .button:hover {
-  background: #b85e3e;
+  background: #966c30;
 }
 
 .button-outline {
   background: transparent;
-  color: #8e4c34;
-  border: 1px solid #c96c4b;
+  color: #966c30;
+  border: 1px solid #b08040;
 }
 
 .section {
@@ -267,6 +267,11 @@ a {
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 6px 16px rgba(91, 68, 47, 0.08);
+  transition: border-color 0.2s ease;
+}
+
+.card:hover {
+  border-color: #b08040;
 }
 
 .entity-flow {
@@ -596,7 +601,7 @@ a {
 }
 
 .form-card {
-  margin-bottom: 0;
+  margin-bottom: 1.5rem;
 }
 
 .form-card-actions {
@@ -612,19 +617,11 @@ a {
   margin: 0;
 }
 
-/* Подготовка к встрече: подтягиваем кнопку к полю "Контакт" */
-#prepare-meeting-form .form-card-actions {
-  margin-top: 0;
-}
-
-#prepare-meeting-form .form-card-actions .section-message {
-  min-height: 0;
-}
-
 /* Подравниваем высоту кнопки под высоту поля "Контакт" */
 #prepare-meeting-button {
-  min-height: 2.75rem;
-  padding: 0.6rem 1.6rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 1.2rem;
+  font-size: 0.8rem;
   display: inline-flex;
   align-items: center;
 }
@@ -657,7 +654,7 @@ a {
 .form-card .field textarea:hover,
 .form-card .contact-autocomplete input[type="text"]:hover,
 .form-card .contact-autocomplete input[type="search"]:hover {
-  border-color: #e3b089;
+  border-color: #c9a050;
 }
 
 .form-card .field input:not([type="checkbox"]):not([type="radio"]):focus,
@@ -666,8 +663,8 @@ a {
 .form-card .contact-autocomplete input[type="text"]:focus,
 .form-card .contact-autocomplete input[type="search"]:focus {
   outline: none;
-  border-color: #c96c4b;
-  box-shadow: 0 0 0 2px rgba(201, 108, 75, 0.2);
+  border-color: #b08040;
+  box-shadow: 0 0 0 2px rgba(176, 128, 64, 0.2);
 }
 
 .form-card .field select {
@@ -676,13 +673,191 @@ a {
 
 .add-contact-compact {
   margin-bottom: 1.5rem;
-  padding: 1.25rem 1.5rem;
+  padding: 0.9rem 1.25rem;
 }
 
 .add-contact-compact h2 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3a2e24;
+  margin: 0 0 0.85rem;
+}
+
+.add-contact-compact .field > span {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #6d5a48;
+}
+
+.add-contact-compact .field input:not([type="checkbox"]):not([type="radio"]) {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.add-contact-compact .form-inline-compact {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.add-contact-compact .form-inline-compact .field {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.add-contact-compact .form-inline-compact .form-message {
+  flex-basis: 100%;
+  margin: 0;
+  min-height: 0;
+  order: 10;
+}
+
+.add-contact-compact .form-inline-compact .button {
+  flex-shrink: 0;
+  align-self: flex-end;
+  order: 5;
+  min-height: 2.25rem;
+  padding: 0.4rem 1.2rem;
+  font-size: 0.8rem;
+}
+
+/* Переключатель режимов поиска */
+.search-mode-switcher {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0.85rem;
+  background: #f5ede0;
+  border-radius: 8px;
+  padding: 0.2rem;
+  width: fit-content;
+}
+
+.search-mode-btn {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #8a7060;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.search-mode-btn.is-active {
+  background: #fff;
+  color: #3a2e24;
+  box-shadow: 0 1px 3px rgba(91, 68, 47, 0.15);
+}
+
+.search-mode-panel {
   margin-top: 0;
-  margin-bottom: 0.75rem;
-  font-size: 1.1rem;
+}
+
+.search-mode-hint {
+  margin-bottom: 0.6rem !important;
+}
+
+/* Компактный вид карточек ИИ-агента и глубокого поиска */
+.form-card:has(#fulltext-form) {
+  padding: 0.9rem 1.25rem;
+}
+
+.form-card:has(#fulltext-form) h2 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3a2e24;
+  margin: 0 0 0.85rem;
+}
+
+.form-card:has(#fulltext-form) .muted:not(.meeting-agent-result) {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #6d5a48;
+  margin-top: -0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.form-card:has(#fulltext-form) .field input,
+.form-card:has(#contacts-search) .field input {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.form-card:has(#fulltext-form) .button {
+  min-height: 2.25rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+#fulltext-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 0;
+}
+
+#fulltext-form .field {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+/* Карточка ИИ-агента */
+.form-card:has(#prepare-meeting-form) {
+  padding: 0.9rem 1.25rem;
+}
+
+.form-card:has(#prepare-meeting-form) h2 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3a2e24;
+  margin: 0 0 0.85rem;
+}
+
+.form-card:has(#prepare-meeting-form) .field input,
+.form-card:has(#prepare-meeting-form) .field select,
+.form-card:has(#prepare-meeting-form) .contact-autocomplete input {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+/* Поле «Контакт»: мелкий muted текст как описание */
+#prepare-meeting-form .field > span {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #6d5a48;
+}
+
+/* Форма: поле растягивается, кнопка прижата вправо */
+#prepare-meeting-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 0;
+}
+
+#prepare-meeting-form .field {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+#prepare-meeting-form .form-card-actions {
+  flex-shrink: 0;
+  margin-top: 0;
 }
 
 .form-inline-compact {
@@ -757,6 +932,14 @@ a {
 /* Одиночная карточка не в строке (например, Связи) */
 .contact-layout > .form-card {
   margin-bottom: 0;
+}
+
+/* Единая высота кнопок на странице контакта — как у кнопки «Редактировать» */
+.contact-layout .button,
+.page-actions .button {
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+  font-size: 0.9rem;
 }
 
 /* Внутренние поля в form-карточке (contact-plans-form) */
@@ -942,9 +1125,8 @@ a {
 }
 
 .list-filters {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.6rem;
   margin-bottom: 1rem;
 }
@@ -953,7 +1135,6 @@ a {
   grid-auto-flow: row;
   align-items: stretch;
   gap: 0.2rem;
-  flex: 1 1 0;
   min-width: 0;
 }
 
@@ -961,21 +1142,20 @@ a {
   font-size: 0.75rem;
   color: var(--muted);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .list-filters .field-inline select {
   width: 100%;
   min-width: 0;
   padding-inline: 0.6rem;
+  box-sizing: border-box;
 }
 
 @media (max-width: 720px) {
   .list-filters {
-    flex-wrap: wrap;
-  }
-
-  .list-filters .field-inline {
-    flex: 1 1 calc(50% - 0.3rem);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -1338,23 +1518,17 @@ a {
   color: #6d5a48;
 }
 
-.contact-badge--business,
-.contact-badge--colleague,
-.contact-badge--client,
-.contact-badge--partner,
-.contact-badge--mentor,
-.contact-badge--mentee {
-  background: #deeaf8;
-  color: #2a5a8a;
-}
-
-.contact-badge--personal,
-.contact-badge--friend,
-.contact-badge--acquaintance,
-.contact-badge--family {
-  background: #ddf2e5;
-  color: #2a7a4a;
-}
+.contact-badge--business   { background: #dde8f8; color: #2a508a; }
+.contact-badge--colleague  { background: #d8eef5; color: #1a6880; }
+.contact-badge--client     { background: #d5f0ec; color: #1a6e64; }
+.contact-badge--partner    { background: #e5def8; color: #5040a0; }
+.contact-badge--mentor     { background: #f5e8cc; color: #7a5a10; }
+.contact-badge--mentee     { background: #f8eccc; color: #906820; }
+.contact-badge--personal   { background: #ddf2e5; color: #2a7a4a; }
+.contact-badge--friend     { background: #d5f0e0; color: #1a7a48; }
+.contact-badge--acquaintance { background: #eae6e0; color: #5a5048; }
+.contact-badge--family     { background: #f5dde8; color: #8a3a58; }
+.contact-badge--other      { background: #f0e2d2; color: #6d5a48; }
 
 .contact-card-footer {
   margin-top: 0.6rem;
@@ -1367,6 +1541,154 @@ a {
 .contact-last-seen {
   color: #8e4c34;
   font-weight: 500;
+}
+
+/* ---------------------------------------------------------------
+   Лэйаут страницы контактов (сайдбар)
+--------------------------------------------------------------- */
+.contacts-page-layout {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.contacts-main {
+  min-width: 0;
+}
+
+.contacts-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: sticky;
+  top: 5rem;
+}
+
+.sidebar-widget {
+  padding: 1.1rem 1.25rem;
+}
+
+.sidebar-widget-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8a7060;
+  margin: 0 0 0.65rem;
+}
+
+.sidebar-contact-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #efe0d2;
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.15s;
+}
+
+.sidebar-contact-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sidebar-contact-item:hover .sidebar-contact-name {
+  color: #c96c4b;
+}
+
+.sidebar-contact-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3a2e24;
+  transition: color 0.15s;
+}
+
+.sidebar-contact-meta {
+  font-size: 0.78rem;
+  color: #9a8070;
+}
+
+.sidebar-empty {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.stats-total {
+  font-size: 0.82rem;
+  color: #6d5a48;
+  margin-bottom: 0.6rem;
+}
+
+.stats-total strong {
+  color: #3a2e24;
+  font-weight: 700;
+}
+
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+}
+
+.stats-label {
+  color: #5c4a3a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats-bar-wrap {
+  width: 48px;
+  height: 4px;
+  background: #efe0d2;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stats-bar {
+  display: block;
+  height: 100%;
+  background: #b08040;
+  border-radius: 2px;
+  min-width: 2px;
+  transition: width 0.4s ease;
+}
+
+.stats-count {
+  color: #8a7060;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .contacts-page-layout {
+    grid-template-columns: 1fr;
+  }
+  .contacts-sidebar {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .contacts-sidebar > .card {
+    flex: 1 1 240px;
+  }
+}
+
+@media (max-width: 560px) {
+  .contacts-sidebar {
+    flex-direction: column;
+  }
 }
 
 /* ---------------------------------------------------------------
@@ -1409,7 +1731,7 @@ a {
 }
 
 [data-theme="dark"] .card:hover {
-  border-color: #e07a58;
+  border-color: #c89448;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
@@ -1429,11 +1751,11 @@ a {
 }
 
 [data-theme="dark"] .button {
-  background: #e07a58;
+  background: #c89448;
 }
 
 [data-theme="dark"] .button:hover {
-  background: #c96c4b;
+  background: #b08040;
 }
 
 [data-theme="dark"] .button-outline {
@@ -1486,6 +1808,26 @@ a {
   box-shadow: 0 0 0 2px rgba(224, 122, 88, 0.25);
 }
 
+[data-theme="dark"] .form-card:has(#prepare-meeting-form) h2,
+[data-theme="dark"] .form-card:has(#fulltext-form) h2,
+[data-theme="dark"] .add-contact-compact h2 {
+  color: #fff;
+}
+
+[data-theme="dark"] .search-mode-switcher {
+  background: #2e2820;
+}
+
+[data-theme="dark"] .search-mode-btn {
+  color: #7a6858;
+}
+
+[data-theme="dark"] .search-mode-btn.is-active {
+  background: #3a3028;
+  color: #e2d8d0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 [data-theme="dark"] .field input,
 [data-theme="dark"] .field select,
 [data-theme="dark"] .field textarea {
@@ -1529,23 +1871,17 @@ a {
   color: #9e8878;
 }
 
-[data-theme="dark"] .contact-badge--business,
-[data-theme="dark"] .contact-badge--colleague,
-[data-theme="dark"] .contact-badge--client,
-[data-theme="dark"] .contact-badge--partner,
-[data-theme="dark"] .contact-badge--mentor,
-[data-theme="dark"] .contact-badge--mentee {
-  background: #1e3a5a;
-  color: #7ab0e0;
-}
-
-[data-theme="dark"] .contact-badge--personal,
-[data-theme="dark"] .contact-badge--friend,
-[data-theme="dark"] .contact-badge--acquaintance,
-[data-theme="dark"] .contact-badge--family {
-  background: #1a3d28;
-  color: #6ab888;
-}
+[data-theme="dark"] .contact-badge--business    { background: #1a2e4a; color: #7ab0e8; }
+[data-theme="dark"] .contact-badge--colleague   { background: #1a3040; color: #6ab0d0; }
+[data-theme="dark"] .contact-badge--client      { background: #1a3035; color: #50c0b8; }
+[data-theme="dark"] .contact-badge--partner     { background: #25204a; color: #a090e0; }
+[data-theme="dark"] .contact-badge--mentor      { background: #3a2e10; color: #d0a840; }
+[data-theme="dark"] .contact-badge--mentee      { background: #3a2e08; color: #d8b030; }
+[data-theme="dark"] .contact-badge--personal    { background: #1a3020; color: #60b878; }
+[data-theme="dark"] .contact-badge--friend      { background: #162d1e; color: #50c878; }
+[data-theme="dark"] .contact-badge--acquaintance { background: #2a2520; color: #a09888; }
+[data-theme="dark"] .contact-badge--family      { background: #3a1a28; color: #d07098; }
+[data-theme="dark"] .contact-badge--other       { background: #2a2018; color: #a89068; }
 
 [data-theme="dark"] .contact-card-footer {
   border-color: #3a3028;
@@ -1886,3 +2222,30 @@ a {
   background: #4a3a1a;
   color: #f5e8c8;
 }
+
+[data-theme="dark"] .sidebar-widget-title {
+  color: #7a6858;
+}
+
+[data-theme="dark"] .sidebar-contact-item {
+  border-bottom-color: #3a3028;
+}
+
+[data-theme="dark"] .sidebar-contact-name {
+  color: #e2d8d0;
+}
+
+[data-theme="dark"] .sidebar-contact-meta {
+  color: #7a6858;
+}
+
+[data-theme="dark"] .sidebar-contact-item:hover .sidebar-contact-name {
+  color: #e07a58;
+}
+
+[data-theme="dark"] .stats-total { color: #7a6858; }
+[data-theme="dark"] .stats-total strong { color: #e2d8d0; }
+[data-theme="dark"] .stats-label { color: #c8b8a8; }
+[data-theme="dark"] .stats-bar-wrap { background: #3a3028; }
+[data-theme="dark"] .stats-bar { background: #c89448; }
+[data-theme="dark"] .stats-count { color: #7a6858; }

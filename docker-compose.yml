@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DATABASE__DB_USER:-rockfile}
-      POSTGRES_PASSWORD: ${DATABASE__DB_PASSWORD:-rockfile}
+      POSTGRES_PASSWORD: ${DATABASE__DB_PASSWORD:?DATABASE__DB_PASSWORD must be set in .env (see .env.example)}
       POSTGRES_DB: ${DATABASE__DB_NAME:-rockfile}
     ports:
       - "5532:5432"
@@ -21,7 +21,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${KEYCLOAK_DB_USER:-keycloak}
-      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?KEYCLOAK_DB_PASSWORD must be set in .env (see .env.example)}
       POSTGRES_DB: ${KEYCLOAK_DB_NAME:-keycloak}
     volumes:
       - keycloak_data:/var/lib/postgresql/data
@@ -39,12 +39,12 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_PROXY: edge
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-owner}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-owner}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD must be set in .env (see .env.example)}
       KC_DB: postgres
       KC_DB_URL_HOST: keycloak-db
       KC_DB_URL_DATABASE: ${KEYCLOAK_DB_NAME:-keycloak}
       KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-keycloak}
-      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?KEYCLOAK_DB_PASSWORD must be set in .env (see .env.example)}
     ports:
       - "8282:8080"
     depends_on:
@@ -64,7 +64,7 @@ services:
       DATABASE__DB_HOST: postgres
       DATABASE__DB_PORT: 5432
       DATABASE__DB_USER: ${DATABASE__DB_USER:-rockfile}
-      DATABASE__DB_PASSWORD: ${DATABASE__DB_PASSWORD:-rockfile}
+      DATABASE__DB_PASSWORD: ${DATABASE__DB_PASSWORD:?DATABASE__DB_PASSWORD must be set in .env (see .env.example)}
       DATABASE__DB_NAME: ${DATABASE__DB_NAME:-rockfile}
       API__HOST: 0.0.0.0
       API__PORT: 8000

@@ -50,7 +50,7 @@ async def lifespan(app: FastAPI):
                 log.info("БД существует. Применяю миграции...")
             else:
                 log.info("БД отсутствовала. Создал БД и применяю миграции...")
-            run_migrations()
+            await run_migrations()
         else:
             # Если миграций нет, создаем таблицы напрямую
             log.info("Alembic не настроен. Создаю таблицы через SQLAlchemy.")

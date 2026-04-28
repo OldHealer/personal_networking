@@ -8,7 +8,8 @@ from api.schemas.contacts import (ContactCardCreate, ContactCardListResponse, Co
 from api.services.contacts_service import (create_contact as create_contact_service,
                                            delete_contact as delete_contact_service,
                                            get_contact as get_contact_service, list_contacts as list_contacts_service,
-                                           update_contact as update_contact_service, )
+                                           update_contact as update_contact_service,
+                                           get_stats as get_stats_service, )
 
 logger = get_logger()
 contacts_router = APIRouter(prefix="/api/v1/contacts", tags=["Contacts"])
@@ -39,6 +40,12 @@ async def list_contacts(page: int = Query(1, ge=1, description="Номер ст�
     return ContactCardListResponse(items=items, total=total, page=page, per_page=per_page)
 
 
+@contacts_router.get("/stats", summary="Статистика контактов")
+async def get_stats(current_user: CurrentUser = Depends(get_current_user),
+                    session: AsyncSession = Depends(get_db_session)):
+    return await get_stats_service(session=session, tenant_id=current_user.db_user.tenant_id)
+
+
 @contacts_router.post("", response_model=ContactCardResponse, summary="Создать контакт")
 async def create_contact(payload: ContactCardCreate,
                          current_user: CurrentUser = Depends(get_current_user),
@@ -53,7 +60,8 @@ async def get_contact(
     session: AsyncSession = Depends(get_db_session),
 ):
     try:
-        contact = await get_contact_service(session=session, contact_id=contact_id)
+        contact = await get_contact_service(session=session, tenant_id=current_user.db_user.tenant_id,
+                                            contact_id=contact_id)
         return contact
     except HTTPException:
         raise
@@ -70,11 +78,13 @@ async def update_contact(contact_id: str,
                          payload: ContactCardUpdate,
                          current_user: CurrentUser = Depends(get_current_user),
                          session: AsyncSession = Depends(get_db_session)):
-    return await update_contact_service(session=session, contact_id=contact_id, payload=payload)
+    return await update_contact_service(session=session, tenant_id=current_user.db_user.tenant_id,
+                                        contact_id=contact_id, payload=payload)
 
 
 @contacts_router.delete("/{contact_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Удалить контакт")
 async def delete_contact(contact_id: str,
                          current_user: CurrentUser = Depends(get_current_user),
                          session: AsyncSession = Depends(get_db_session)):
-    return await delete_contact_service(session=session, contact_id=contact_id)
+    return await delete_contact_service(session=session, tenant_id=current_user.db_user.tenant_id,
+                                        contact_id=contact_id)

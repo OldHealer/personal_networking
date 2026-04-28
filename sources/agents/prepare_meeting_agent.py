@@ -9,6 +9,7 @@
   - FastAPI роут `/api/v1/agents/prepare-meeting` создает state, запускает граф и возвращает `PrepareMeetingResponse`.
 """
 
+import asyncio
 from dataclasses import dataclass
 from typing import Any, Literal, NotRequired, TypedDict
 
@@ -128,6 +129,7 @@ def build_default_ollama_llm() -> ChatOllama:
             temperature=agent_cfg.ollama_temperature,
             num_predict=agent_cfg.ollama_num_predict,
             base_url=agent_cfg.ollama_base_url,
+            timeout=agent_cfg.ollama_timeout,
         )
     return _llm_instance
 
@@ -504,4 +506,22 @@ async def run_prepare_meeting_agent(
 
     graph = build_prepare_meeting_graph(cfg)
     state: PrepareMeetingState = {"user_query": query or "", "contact_id": contact_id}
-    return await graph.ainvoke(state)
+    try:
+        return await asyncio.wait_for(
+            graph.ainvoke(state),
+            timeout=app_config.agent.agent_total_timeout,
+        )
+    except asyncio.TimeoutError:
+        return {
+            "user_query": query or "",
+            "contact_id": contact_id,
+            "status": "error",
+            "error_message": (
+                f"Агент не завершился за {app_config.agent.agent_total_timeout} секунд. "
+                "Ollama работает слишком медленно или недоступна."
+            ),
+            "output": (
+                f"# Ошибка\n\nАгент не завершился за {app_config.agent.agent_total_timeout} секунд. "
+                "Проверьте, что Ollama запущена и модель загружена."
+            ),
+        }
