@@ -7,6 +7,7 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Changed
+- **`LOCAL_DEV` flag:** was a hardcoded `bool = False` in `settings.py`. Now read from the `LOCAL_DEV` environment variable (`"1"/"true"/"yes"` → `True`). Set it in the shell or IDE run config when working locally against `.env.local`; production deployments need no change. Added commented example to `.env.example`.
 - **ORM lazy loading:** all collection relationships (`Tenant.users`, `Tenant.contacts`, `ContactCard.family_members/interactions/links_from/links_to`) changed from `lazy="selectin"` to `lazy="raise"`. Previously every `GET /contacts/{id}` and list query fired 4–6 extra SELECTs for collections that are never accessed via ORM (all data is fetched through explicit service queries). With `lazy="raise"` accidental attribute access raises an explicit error instead of silently issuing a query.
 
 ### Fixed

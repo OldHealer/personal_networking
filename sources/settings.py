@@ -10,7 +10,7 @@ from pydantic import SecretStr, BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-LOCAL_DEV: bool = False # Флаг для локального запуска с IDE и миграций
+LOCAL_DEV: bool = os.getenv("LOCAL_DEV", "false").lower() in ("1", "true", "yes")
 
 
 class ApiSettings(BaseModel):
