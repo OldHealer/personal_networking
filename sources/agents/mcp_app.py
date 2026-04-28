@@ -28,7 +28,7 @@ from sqlalchemy import select
 from api.auth.keycloak_module import verify_jwt_token
 from api.data_base.base import db
 from api.data_base.models import AppUser
-from agents.tools.contacts_tools import contacts_get
+from agents.tools.contacts_tools import contacts_get, contacts_list, promises_list
 
 
 mcp = FastMCP("rockfile-mcp")
@@ -65,6 +65,78 @@ async def _get_or_create_user(session, token_payload) -> AppUser:
     await session.commit()
     await session.refresh(user)
     return user
+
+
+@mcp.tool
+async def contacts_list_tool(
+    access_token: str,
+    q: str | None = None,
+    relationship_type: str | None = None,
+    last_contact_before: int | None = None,
+    has_birthday_soon: int | None = None,
+    sort: str = "full_name",
+    page: int = 1,
+    per_page: int = 20,
+) -> dict[str, Any]:
+    """
+    MCP tool: contacts.list
+
+    Вход:
+      - access_token: JWT пользователя
+      - q: поиск по имени/email
+      - relationship_type: фильтр по типу отношений
+      - last_contact_before: давно не общались (дней)
+      - has_birthday_soon: ДР в ближайшие N дней
+      - sort: full_name | last_contact_at | created_at
+      - page, per_page: пагинация
+
+    Выход:
+      - { items, total, page, per_page }
+    """
+    token_payload = await verify_jwt_token(access_token)
+
+    async with db.session_factory() as session:
+        db_user = await _get_or_create_user(session, token_payload)
+        return await contacts_list(
+            session=session,
+            tenant_id=db_user.tenant_id,
+            q=q,
+            relationship_type=relationship_type,
+            last_contact_before=last_contact_before,
+            has_birthday_soon=has_birthday_soon,
+            sort=sort,
+            page=page,
+            per_page=per_page,
+        )
+
+
+@mcp.tool
+async def promises_list_tool(
+    access_token: str,
+    open_only: bool = True,
+    direction: str | None = None,
+) -> dict[str, Any]:
+    """
+    MCP tool: promises.list
+
+    Вход:
+      - access_token: JWT пользователя
+      - open_only: только незакрытые (по умолчанию True)
+      - direction: mine | theirs | None (все)
+
+    Выход:
+      - { items, total }
+    """
+    token_payload = await verify_jwt_token(access_token)
+
+    async with db.session_factory() as session:
+        db_user = await _get_or_create_user(session, token_payload)
+        return await promises_list(
+            session=session,
+            tenant_id=db_user.tenant_id,
+            open_only=open_only,
+            direction=direction,
+        )
 
 
 @mcp.tool

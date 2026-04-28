@@ -22,9 +22,9 @@ from typing import Any
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.services.contacts_service import get_contact as get_contact_service
+from api.services.contacts_service import get_contact as get_contact_service, list_contacts as list_contacts_service
 from api.services.links_service import list_links_for_contact
-from api.services.interactions_service import list_interactions_for_contact
+from api.services.interactions_service import list_interactions_for_contact, list_promises
 
 
 async def contacts_get(
@@ -82,4 +82,58 @@ async def contacts_get(
         "links": links_dict,
         "interactions": interactions_dict,
     }
+
+
+async def contacts_list(
+    *,
+    session: AsyncSession,
+    tenant_id: Any,
+    q: str | None = None,
+    relationship_type: str | None = None,
+    last_contact_before: int | None = None,
+    has_birthday_soon: int | None = None,
+    sort: str = "full_name",
+    page: int = 1,
+    per_page: int = 20,
+) -> dict[str, Any]:
+    """
+    Tool: contacts.list
+
+    Возвращает постраничный список контактов с опциональными фильтрами.
+    Используется агентом для составления shortlist кандидатов.
+    """
+    items, total = await list_contacts_service(
+        session=session,
+        tenant_id=tenant_id,
+        page=page,
+        per_page=per_page,
+        sort=sort,
+        q=q,
+        last_contact_before=last_contact_before,
+        relationship_type=relationship_type,
+        has_birthday_soon=has_birthday_soon,
+    )
+    return {
+        "items": [c.model_to_dict() if hasattr(c, "model_to_dict") else {"id": str(c.id)} for c in items],
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+    }
+
+
+async def promises_list(
+    *,
+    session: AsyncSession,
+    tenant_id: Any,
+    open_only: bool = True,
+    direction: str | None = None,
+) -> dict[str, Any]:
+    """
+    Tool: promises.list
+
+    Возвращает обещания по всем контактам тенанта.
+    Используется агентом для сводки «я должен / мне должны».
+    """
+    items = await list_promises(session=session, tenant_id=tenant_id, open_only=open_only, direction=direction)
+    return {"items": items, "total": len(items)}
 
