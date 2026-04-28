@@ -104,7 +104,7 @@
 
 ---
 
-## Фаза 5: AI-агент подготовки к встрече 🚧
+## Фаза 5: AI-агенты ✅
 
 | #   | Задача                                              | Результат                                            | Статус |
 | --- | --------------------------------------------------- | ---------------------------------------------------- | ------ |
@@ -113,7 +113,10 @@
 | 5.3 | Локальный режим (без MCP) через сервисный слой      | Переключение через `AGENT__MODE`                     | ✅     |
 | 5.4 | `POST /api/v1/agents/prepare-meeting`               | Эндпоинт вызова агента, результат в UI               | ✅     |
 | 5.5 | Автодополнение контакта в форме агента (UI)         | Поиск по имени, выбор из списка                      | ✅     |
-| 5.6 | Агент 2 «Concierge» — ДР, обещания, matchmaker      | Мультисценарный граф с ветвлением (дизайн готов)     | ❌     |
+| 5.6 | `GET /api/v1/promises` — агрегированный список обещаний | Параметры: `open`, `direction`; 7 тестов         | ✅     |
+| 5.7 | MCP tools `contacts_list_tool` + `promises_list_tool`| В `mcp_app.py`; Python-функции в `contacts_tools.py` | ✅     |
+| 5.8 | Агент «Concierge» (`concierge_agent.py`)            | LangGraph граф: birthdays / promises / matchmaker / unknown; `POST /api/v1/agents/concierge` | ✅     |
+| 5.9 | UI-карточка Concierge на странице контактов         | Форма с textarea, вывод markdown-ответа              | ❌     |
 
 ---
 
@@ -152,6 +155,8 @@
 | 8.4 | Интеграционные тесты links / interactions           | CRUD, complete promise, rebuild promises on delete, tenant isolation (20 тестов) | ✅     |
 | 8.5 | Интеграционные тесты search                         | 7 тестов: поля, JSON-массивы, заметки, tenant, ранжирование, лимит           | ✅     |
 | 8.6 | Интеграционные тесты auth                           | GET /me (auth/unauth), register (success/dup/validation), login (8 тестов)   | ✅     |
+| 8.7 | Интеграционные тесты promises                       | 7 тестов: список, фильтры open/direction, tenant isolation                   | ✅     |
+| 8.8 | Тест агента Concierge (мок tools/LLM)               | Все ветки intent: birthdays, promises, matchmaker, unknown, error             | ❌     |
 
 ---
 
@@ -179,12 +184,13 @@
 
 ## Текущие приоритеты (следующие шаги)
 
-| Приоритет | Фаза | Задача                                         |
-| --------- | ---- | ---------------------------------------------- |
-| 🟡 1      | 5.6  | Агент 2 «Concierge» (дизайн готов в AGENTS.md) |
-| 🟡 2      | 8.3  | Тест агента prepare-meeting (мок MCP)          |
-| 🟢 3      | 7.1  | Теги для группировки контактов                 |
-| 🟢 4      | 7.2  | Напоминания (ContactReminder)                  |
+| Приоритет | Фаза | Задача                                              |
+| --------- | ---- | --------------------------------------------------- |
+| 🟡 1      | 5.9  | UI-карточка Concierge (textarea + markdown-ответ)   |
+| 🟡 2      | 8.8  | Тест агента Concierge (мок tools/LLM)               |
+| 🟡 3      | 8.3  | Тест агента prepare-meeting (мок MCP)               |
+| 🟢 4      | 7.1  | Теги для группировки контактов                      |
+| 🟢 5      | 7.2  | Напоминания (ContactReminder)                       |
 
 ---
 

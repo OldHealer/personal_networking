@@ -92,6 +92,26 @@
             </section>
 
             <section class="card form-card">
+              <h2>Консьерж (AI‑агент)</h2>
+              <form id="concierge-form" class="form form-inline-compact">
+                <label class="field">
+                  <span>Запрос</span>
+                  <textarea
+                    id="concierge-message"
+                    rows="2"
+                    placeholder="Чьи дни рождения на этой неделе? Что я обещал? Кто мне поможет с задачей X?"
+                    maxlength="500"
+                  ></textarea>
+                </label>
+                <div class="form-card-actions">
+                  <p id="concierge-status" class="form-message section-message"></p>
+                  <button id="concierge-button" class="button" type="button">Спросить</button>
+                </div>
+              </form>
+              <div id="concierge-result" class="meeting-agent-result muted" style="white-space: pre-wrap;"></div>
+            </section>
+
+            <section class="card form-card">
               <h2>Поиск</h2>
               <div class="search-mode-switcher" role="tablist" aria-label="Режим поиска">
                 <button class="search-mode-btn is-active" data-mode="name" type="button"

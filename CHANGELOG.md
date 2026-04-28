@@ -7,6 +7,7 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- UI-карточка «Консьерж» на странице контактов: textarea для свободного запроса, кнопка «Спросить», отображение ответа агента с указанием распознанного намерения. Вызывает `POST /api/v1/agents/concierge`. Функция `runConcierge()` в `contacts.js`, событие `submit` на форме и `click` на кнопке.
 - Concierge-агент (`concierge_agent.py`) — мультисценарный LangGraph-граф с ветвлением по намерению: birthdays (ДР в окне N дней), promises (сводка открытых обещаний mine/theirs), matchmaker (поиск контакта под задачу с enrich-шагом), unknown (запрос уточнения). Эндпоинт `POST /api/v1/agents/concierge`. Схемы `ConciergeRequest/Response`.
 - MCP tools `contacts_list_tool` и `promises_list_tool` в `mcp_app.py`. Соответствующие Python-функции `contacts_list` и `promises_list` в `contacts_tools.py`. `contacts_list` поддерживает все фильтры существующего REST API (`q`, `relationship_type`, `last_contact_before`, `has_birthday_soon`, `sort`, пагинация). Нужны для Concierge-агента (matchmaker и promises ветки).
 - `GET /api/v1/promises` — агрегированный список обещаний по всем контактам тенанта. Параметры: `open=true` (только незакрытые, по умолчанию), `direction=mine|theirs`. Каждый элемент содержит `promise_id`, `text`, `direction`, `completed_at`, `contact_id`, `contact_name`, `interaction_id`. Читает из `ContactCard.promises` (денормализованный агрегат) — один SELECT. 7 интеграционных тестов.

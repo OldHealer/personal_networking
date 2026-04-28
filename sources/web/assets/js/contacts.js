@@ -318,6 +318,63 @@ async function prepareMeeting() {
   }
 }
 
+// --- Concierge-агент ---
+
+async function runConcierge() {
+  const messageEl = document.getElementById("concierge-message");
+  const statusEl = document.getElementById("concierge-status");
+  const resultEl = document.getElementById("concierge-result");
+  if (!messageEl || !statusEl || !resultEl) return;
+
+  const message = String(messageEl.value || "").trim();
+  if (!message) {
+    statusEl.textContent = "Введите запрос.";
+    return;
+  }
+
+  const token = getToken();
+  if (!token) {
+    window.location.href = "/login.html";
+    return;
+  }
+
+  statusEl.textContent = "Думаю…";
+  resultEl.textContent = "";
+
+  try {
+    const response = await fetch("/api/v1/agents/concierge", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message }),
+    });
+
+    if (response.status === 401) {
+      handleUnauthorized(response);
+      return;
+    }
+
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch (_) {}
+
+    if (!response.ok) {
+      const detail = data && data.detail ? data.detail : text || "Не удалось получить ответ.";
+      statusEl.textContent = `Ошибка: ${typeof detail === "string" ? detail : JSON.stringify(detail)}`;
+      return;
+    }
+
+    statusEl.textContent = `Намерение: ${data.intent || "—"} · ${data.status || "ok"}`;
+    resultEl.textContent = data.final_reply || "";
+  } catch (e) {
+    statusEl.textContent = "Сетевая ошибка при обращении к агенту.";
+  }
+}
+
 // --- Глубокий (полнотекстовый) поиск ---
 
 function formatOccurredAt(dateStr) {
@@ -678,6 +735,18 @@ document.addEventListener("DOMContentLoaded", () => {
     prepareButton.addEventListener("click", prepareMeeting);
   }
   initPrepareMeetingAutocomplete();
+
+  const conciergeForm = document.getElementById("concierge-form");
+  if (conciergeForm) {
+    conciergeForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      runConcierge();
+    });
+  }
+  const conciergeButton = document.getElementById("concierge-button");
+  if (conciergeButton) {
+    conciergeButton.addEventListener("click", runConcierge);
+  }
 
   const sortSelect = document.getElementById("contacts-sort");
   if (sortSelect) {
